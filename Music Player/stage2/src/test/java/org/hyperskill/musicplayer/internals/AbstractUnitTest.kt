@@ -126,6 +126,17 @@ abstract class AbstractUnitTest<T : Activity>(clazz: Class<T>) {
     }
 
     /**
+     * Use this method to find views.
+     *
+     * Returns null if view is not found or unexpected class
+     */
+    inline fun <reified T> View.findViewByStringOrNull(idString: String): T? {
+        val id = this.resources.getIdentifier(idString, "id", context.packageName)
+        val view: View? = this.findViewById(id)
+        return view as T?
+    }
+
+    /**
      * Use this method to perform clicks. It will also advance the clock millis milliseconds and run
      * enqueued Runnable scheduled to run on main looper in that timeframe.
      * Default value for millis is 500.
