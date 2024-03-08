@@ -1,0 +1,57 @@
+<h2>Description</h2>
+
+<p>In this project, you will create a simple song player. With this app, you will be able to play songs stored on your device, create playlists with your favorite songs and save them in the database so that they are not lost after closing the app.</p>
+
+<p>You will also try to have some fun because why not.</p>
+
+<p>Your resulting app, although simple, will have one outstanding pro: it will be yours, free of ads, free of subscriptions, and customizable by directly changing the source code.</p>
+
+<p>In this initial stage, you will start focusing on the UI by preparing the layout structure of your <code>MainActivity</code>. You don't need to be concerned with fully implementing actions for most widgets. UX will be the focus of the following stage. Here, you will deal with adding the primary widgets you will be using and preparing the general look of the Activity.</p>
+
+<h2>Objectives</h2>
+
+<ol>
+	<li>Add a search button to the <code>MainActivity</code>.
+
+	<ul>
+		<li>id <code>mainButtonSearch</code></li>
+		<li>text <code>search</code></li>
+		<li>on click, show the message <code>no songs found</code>.</li>
+	</ul>
+	</li>
+	<li>Add a <code>RecyclerView</code> to the <code>MainActivity</code>.
+	<ul>
+		<li>id <code>mainSongList</code></li>
+		<li>just keep it empty for this stage</li>
+	</ul>
+	</li>
+	<li>Add a <code>FragmentContainerView</code> to the <code>MainActivity</code>.
+	<ul>
+		<li>id <code>mainFragmentContainer</code></li>
+		<li><code>init</code> it with the <code>MainPlayerControllerFragment</code></li>
+	</ul>
+	</li>
+	<li>Create a <code>MainPlayerControllerFragment</code> that extends <code>Fragment</code>:
+	<ul>
+		<li>add a <code>TextView</code> with the id <code>controllerTvCurrentTime</code> and the text <code>"00:00"</code>;</li>
+		<li>add a <code>TextView</code> with the id <code>controllerTvTotalTime</code> and the text <code>"00:00"</code>;</li>
+		<li>add a <code>SeekBar</code> with the id <code>controllerSeekBar</code>;</li>
+		<li>add a <code>Button</code> with the id <code>controllerBtnPlayPause</code> with the text <code>"play/pause"</code>;</li>
+		<li>add a <code>Button</code> with the id <code>controllerBtnStop</code> with the text <code>"stop"</code>.</li>
+	</ul>
+	</li>
+	<li>Create an <a href="https://developer.android.com/develop/ui/views/components/menus#options-menu" rel="noopener noreferrer nofollow">options menu</a> with three <code>item</code> (Add Playlist, Load Playlist, Delete Playlist):
+	<ul>
+		<li>add the item Add Playlist, with the id <code>mainMenuAddPlaylist</code> and the title <code>"Add Playlist"</code>. On click, show the message <code>"no songs loaded, click search to load songs"</code>;</li>
+		<li>add the item Load Playlist, with the id <code>mainMenuLoadPlaylist</code> and the title <code>"Load Playlist"</code>. On click, show an <code>AlertDialog</code> with title <code>"choose playlist to load"</code>, and a negative button with the text <code>"cancel"</code> that does nothing;</li>
+		<li>add the item Delete Playlist, with the id <code>mainMenuDeletePlaylist</code> and the title <code>"Delete Playlist"</code>. On click, show an <code>AlertDialog</code> with title <code>"choose playlist to delete"</code> and a negative button with text <code>"cancel"</code> that does nothing;</li>
+		<li>use <code>import android.app.AlertDialog</code>, the AppCompat alternative version will fail.</li>
+	</ul>
+	</li>
+</ol>
+
+<p>obs: tests assume the existence of a file named "wisdom.mp3" on res/raw. It should be loaded automatically with the project, but if for some reason it goes missing use this link to restore it <a href="https://stepik.org/media/attachments/lesson/791917/wisdom.mp3" rel="noopener noreferrer nofollow"> https://stepik.org/media/attachments/lesson/791917/wisdom.mp3</a></p>
+
+<h2>Example</h2>
+
+<p><img alt="android music player layout" height="524" name="MusicPlayerStage1_01.gif" src="https://ucarecdn.com/4a2f43f7-01fc-476b-8d62-ad45e3d52ac7/" width="305"></p>

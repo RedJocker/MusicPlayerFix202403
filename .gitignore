@@ -1,0 +1,29 @@
+# Ignore build files
+/.gradle
+**/build
+
+# Uncash gradle wrapper
+/gradle/wrapper
+gradlew
+gradlew.bat
+
+# Ignore IntelliJ IDEA files
+**/.idea
+*.iml
+
+# Ignore local files
+local.properties
+
+
+# Ignore plugin files
+#*.yaml
+#*.html
+
+# Ignore osx folder metadata
+.DS_Store
+
+
+# Emacs temp files
+*~
+\#*\#
+

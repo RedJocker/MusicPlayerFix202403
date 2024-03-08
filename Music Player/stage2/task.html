@@ -1,0 +1,149 @@
+<h2>Description</h2>
+
+<p>In this stage, you will be implementing actions for most of the needed widgets, including implementing the playlist feature. You will focus primarily on the UX concerning events state transitions and how the Activity display should react to those.</p>
+
+<p>There are going to be a lot of states that you are expected to manage. It means that there will be a lot of work involved because managing a complex state structure with lots of triggers is just not easy. Be careful with illegal states; the more you think about them, the more illicit forms you will find.</p>
+
+<p>The good news is that, if implemented with a proper design, the remaining stages should be relatively easy after this stage. Even if you are not comfortable working with <code>MediaPlayer</code>, <code>ContentResolver</code>, and <code>SQLiteDatabase</code>, which are the main subjects of the following stages. You should be able to better focus on them by being concerned only with wiring them with the presentation layer.</p>
+
+<h2>Objectives</h2>
+
+<ol>
+	<li>View State:
+	<ul>
+		<li>there will be two different states your activity should have: PLAY_MUSIC state and ADD_PLAYLIST state;</li>
+		<li>in the PLAY_MUSIC state, display <code>list_item_song</code> on <code>mainSongList</code> and <code>MainPlayerControllerFragment</code> on <code>mainFragmentContainer</code>;</li>
+		<li>in the ADD_PLAYLIST state, display <code>list_item_song_selector</code> on <code>mainSongList</code> and <code>MainAddPlaylistFragment</code> on <code>mainFragmentContainer</code>;</li>
+		<li>other combinations of <code>mainSongList</code> content and <code>mainFragmentContainer</code> content are not valid.</li>
+	</ul>
+	</li>
+	<li>Song:
+	<ul>
+		<li>create a model for storing song info; in the following stages, all info will be retrieved from files stored on your device;</li>
+		<li>add an id to the model – a number, which is the file id of the song;</li>
+		<li>add a title to the model – a text, which is the title of the song;</li>
+		<li>add an artist to the model – a text, which is the name of the performer(s);</li>
+		<li>add duration to the model – a number, which is the song's duration in milliseconds.</li>
+	</ul>
+	</li>
+	<li><code>currentPlaylist</code>:
+	<ul>
+		<li>a playlist is a list of <code>Song</code> elements, the <code>currentPlaylist</code> is the playlist that is displayed in the <code>PLAY_MUSIC</code> state;</li>
+		<li>on the <code>currentPlaylist</code>, there is always a <code>currentTrack</code>, which is the song that is currently loaded in response to <code>MainPlayerControllerFragment</code> events; it can be played, paused, or stopped; a <code>Track</code> is a song with its current state: playing, paused, or stopped;</li>
+		<li>loading a playlist in the <code>PLAY_MUSIC</code> state should change the <code>currentPlaylist</code> to the loaded playlist;</li>
+		<li>if a playlist that is loaded in the <code>PLAY_MUSIC</code> state contains the <code>currentTrack</code>, then the <code>currentTrack</code> should remain selected; if the <code>currentTrack</code> is playing/paused/stopped, it should remain to play/paused/stopped;</li>
+		<li>loading a playlist in the <code>ADD_PLAYLIST</code> state should not change the <code>currentPlaylist</code>, but the list displayed in this state should change to the loaded playlist.</li>
+	</ul>
+	</li>
+	<li><code>list_item_song</code>:
+	<ul>
+		<li><code>list_item_song</code> is the layout to be used in <code>mainSongList</code> during the <code>PLAY_MUSIC</code> state and just in that state;</li>
+		<li>create an XML that you can name <code>list_item_song.xml</code>. It will be used to display the items of the current playlist, which is a list of <code>Song</code> items;</li>
+		<li>add an <code>ImageButton</code> with the id <code>songItemImgBtnPlayPause</code> and initial image <code>ic_play</code>, available on <code>res/drawable/</code>;</li>
+		<li>add a <code>TextView</code> with the id <code>songItemTvArtist</code>; the text value should be the song's artist;</li>
+		<li>add a <code>TextView</code> with the id <code>songItemTvTitle</code>; the text value should be the song's title;</li>
+		<li>add a <code>TextView</code> with the id <code>songItemTvDuration</code>; the text value should be the song's duration in "clock format", that is, <em>mm:ss</em>; ss ranges from 00 to 59, representing seconds, and mm ranges from 00 to infinity, representing minutes;</li>
+		<li>clicking on <code>songItemImgBtnPlayPause</code> should change the <code>currentTrack</code> if it is a different track; if the track was not in the playing state, it should change to the playing state and change the image of the button to <code>ic_pause</code>; if the track was in the playing state, it should change to paused state and change the image of the button to <code>ic_play</code>; if there is a change on the <code>currentTrack</code>, the old <code>currentTrack</code> should be stopped and change the image of the button to <code>ic_play</code>;</li>
+		<li>add an action performed on a long click on the item: on a long click, the view state should change to <code>ADD_PLAYLIST</code>, and the item that triggered the long click should be selected.</li>
+	</ul>
+	</li>
+	<li><code>SongSelector</code>:
+	<ul>
+		<li><code>SongSelector</code> is a Song with its current variable state <code>isSelected</code>.</li>
+	</ul>
+	</li>
+	<li><code>list_item_song_selector</code>:
+	<ul>
+		<li><code>list_item_song_selector</code> is the layout to be used in <code>mainSongList</code> during ADD_PLAYLIST state and just in that state;</li>
+		<li>create an XML that you can name <code>list_item_song_selector.xml</code>; it will be used to display the <code>loadedPlaylist</code>, which is a list of <code>SongSelector</code> to be displayed in ADD_PLAYLIST state;</li>
+		<li>add a <code>CheckBox</code> with the id <code>songSelectorItemCheckBox</code>; the checkbox should not be clickable, and it should change its <code>isChecked</code> state on a click on a list item; the checkbox's <code>isChecked</code> state should match the <code>SongSelector</code> <code>isSelected</code> state;</li>
+		<li>the background color of the list item should change according to the <code>isSelected</code> state of the model item; if the item <code>isSelected=true</code>, then the color should be <code>Color.LTGRAY</code>, if not, then it should be <code>Color.WHITE</code>; be aware of the recycling nature of the <code>RecyclerView</code>: strange states might happen if you are not;</li>
+		<li>add a <code>TextView</code> with the id <code>songSelectorItemTvArtist</code>; the text value should be the song's artist;</li>
+		<li>add a <code>TextView</code> with the id <code>songSelectorItemTvTitle</code>; the text value should be the song's title;</li>
+		<li>add a <code>TextView</code> with the id <code>songSelectorItemTvDuration</code>; the text value should be the song's duration in "clock format", that is, <em>mm:ss</em>; ss ranges from 00 to 59, representing seconds, and mm ranges from 00 to infinity, representing minutes.</li>
+	</ul>
+	</li>
+	<li><code>mainButtonSearch</code>:
+	<ul>
+		<li>on click, you should "find" a hard-coded list with 10 <code>Song</code>;</li>
+		<li>the first Song item of this hard-coded list should have <code>id=1</code>, <code>title="title1"</code>, <code>artist="artist1"</code>, <code>duration=215_000</code>;</li>
+		<li>the following items of the hard-coded list should have the same structure as the first, replacing all those with the list position of the current item (one indexed); the duration value is constant for all items;</li>
+		<li>create a playlist named "All Songs" with the list of all songs that were found;</li>
+		<li>if you click on <code>mainButtonSearch</code> in the <code>PLAY_MUSIC</code> state, set the playlist named "All Songs" as the <code>currentPlaylist</code>;</li>
+		<li>if you click on <code>mainButtonSearch</code> in the <code>ADD_PLAYLIST</code> state, update the playlist named "All Songs" and display the updated songs on <code>mainSongList</code>, but do not change the <code>currentPlaylist</code>; when returning to the PLAY_MUSIC state, if the <code>currentPlaylist</code> is also the playlist named "All Songs", then <code>mainSongList</code> should display the updated values (in this stage, you will always find the same list);</li>
+		<li>if a playlist named "All Songs" already exists, update the values of the playlist and display the updated content (in this stage, you will always find the same list).</li>
+	</ul>
+	</li>
+	<li><code>mainMenuAddPlaylist</code>:
+	<ul>
+		<li>ignore clicks on <code>mainMenuAddPlaylist</code> if already in the <code>ADD_PLAYLIST</code> state;</li>
+		<li>if the "All Songs" playlist is empty, then you should display the same message as in the previous stage: <code>"no songs loaded, click search to load songs"</code>;</li>
+		<li>if the "All Songs" playlist is not empty, then change the state to ADD_PLAYLIST state;</li>
+		<li>on the transition from the <code>PLAY_MUSIC</code> state to the <code>ADD_PLAYLIST</code> state, always display on <code>mainSongList</code> a list of <code>SongSelectors</code>, based on the "All Songs" playlist, even if "All Songs" is not the <code>currentPlaylist</code>;</li>
+		<li>no <code>songSelectors</code> should be selected if the transition is triggered by clicking on <code>mainMenuAddPlaylist</code>; if the transition is triggered by a long click event on a <code>list_item_song</code>, then only that item should be selected; there are no other differences between clicking on a <code>mainMenuAddPlaylist</code> and long clicking on a <code>list_item_song</code>.</li>
+	</ul>
+	</li>
+	<li>Create a <code>MainAddPlaylistFragment</code> that extends <code>Fragment</code>:
+	<ul>
+		<li>add an <code>EditText</code> with the id <code>addPlaylistEtPlaylistName</code> and the hint <code>"Playlist Name"</code>;</li>
+		<li>add a <code>Button</code> with the id <code>addPlaylistBtnCancel</code> with the text <code>"Cancel"</code>; on click, you should just transition back to the <code>PLAY_MUSIC</code> state; the <code>currentPlaylist</code> should not have changed during the <code>ADD_PLAYLIST</code> state and should be displayed again after the transition;</li>
+		<li>add a <code>Button</code> with the id <code>addPlaylistBtnOk</code> with text <code>"Ok"</code>;</li>
+		<li>On click, if no <code>SongSelector</code> is selected, then show a toast with the message <code>"Add at least one song to your playlist"</code>;</li>
+		<li>If there are selected songs, but the <code>addPlaylistEtPlaylistName</code> text is blank, then show a toast with the message <code>"Add a name to your playlist"</code>;</li>
+		<li>If there are selected songs but the <code>addPlaylistEtPlaylistName</code> text is "All Songs", then show a toast with the message <code>"All Songs is a reserved name choose another playlist name"</code>;</li>
+		<li>Otherwise, add a playlist with the name taken from the <code>addPlaylistEtPlaylistName</code> text and with the songs from the list of selected <code>SongSelectors</code> and transition back to the <code>PLAY_MUSIC</code> state; the <code>currentPlaylist</code> should not have changed during the ADD_PLAYLIST state and should be displayed again after the transition.</li>
+	</ul>
+	</li>
+	<li><code>mainMenuLoadPlaylist</code>:
+	<ul>
+		<li>keep showing the <code>AlertDialog</code> from the previous stage;</li>
+		<li>add items to be selected to the <code>AlertDialog</code>; the items are based on all existing playlist names;</li>
+		<li>on <code>itemSelected</code> load the playlist that has the same name as the item;</li>
+		<li>if the list is loaded on the <code>PLAY_MUSIC</code> state, then the <code>currentPlaylist</code> should change and the new <code>currentPlaylist</code> should be displayed; if the list contains the <code>currentTrack</code>, then the track should remain selected, and if the <code>currentTrack</code> is playing/paused/stopped, it should remain to play/paused/stopped;</li>
+		<li>if the list is loaded on the <code>ADD_PLAYLIST</code> state, then display the <code>loadedPlaylist</code>, which is a list of <code>SongSelector</code>; if the list includes a <code>SongSelector</code> from the old <code>loadedPlaylist</code>, the <code>SongSelector</code> should keep the <code>isSelected</code> state, if it does not include a <code>SongSelector</code>, it should not be selected.</li>
+	</ul>
+	</li>
+	<li><code>mainMenuDeletePlaylist</code>:
+	<ul>
+		<li>keep showing the <code>AlertDialog</code> from the previous stage;</li>
+		<li>add items to be selected to the <code>AlertDialog</code>; the items are based on all existing playlist names, except the "All Songs" playlist;</li>
+		<li>on <code>itemSelected</code> delete the playlist that has the same name as the item;</li>
+		<li>if the playlist deleted is the <code>currentPlaylist</code>, then change the <code>currentPlaylist</code> to the "All Songs" playlist;</li>
+		<li>if the playlist is deleted on the <code>ADD_PLAYLIST</code> state, then display the "All Songs" playlist.</li>
+	</ul>
+	</li>
+	<li><code>MainPlayerControllerFragment</code>:
+	<ul>
+		<li>when you click on <code>controllerBtnPlayPause</code>, then <code>currentTrack</code> should respond by changing its playing/paused/stopped state; if the <code>currentTrack</code> is playing, the <code>songItemImgBtnPlayPause</code> associated with the <code>currentTrack</code> should display <code>ic_pause</code>; if the <code>currentTrack</code> is paused/stopped, the <code>songItemImgBtnPlayPause</code> associated with the <code>currentTrack</code> should display <code>ic_play</code>;</li>
+		<li>when you click on <code>controllerBtnStop</code>, then <code>currentTrack</code> should respond by changing the state to stopped state; the <code>songItemImgBtnPlayPause</code> associated with the <code>currentTrack</code> should display <code>ic_play</code>.</li>
+	</ul>
+	</li>
+</ol>
+
+<p>obs: tests assume the existence of a file named "wisdom.mp3" on res/raw. It should be loaded automatically with the project, but if for some reason it goes missing use this link to restore it <a href="https://stepik.org/media/attachments/lesson/791917/wisdom.mp3" rel="noopener noreferrer nofollow"> https://stepik.org/media/attachments/lesson/791917/wisdom.mp3</a></p>
+
+<h2>Examples</h2>
+
+<p><img alt="android music player play" height="524" name="MusicPlayerStage2_01.gif" src="https://ucarecdn.com/3fe9fdeb-4777-45a9-bcb1-dd94848cce6f/" width="305"></p>
+
+<p> </p>
+
+<p><img alt="android music player playlist create" height="524" name="MusicPlayerStage2_02.gif" src="https://ucarecdn.com/da83e282-ce65-4ac5-b48f-b5a22c1d3b8b/" width="305"></p>
+
+<p> </p>
+
+<p> </p>
+
+<p><img alt="android music player playlist load" height="524" name="MusicPlayerStage2_03.gif" src="https://ucarecdn.com/5da1c266-bc5a-4733-a02d-16ec2e8d3b44/" width="305"></p>
+
+<p> </p>
+
+<p> </p>
+
+<p><img alt="android music player playlist delete" height="524" name="MusicPlayerStage2_04.gif" src="https://ucarecdn.com/bdb9cd76-3334-4067-b4d0-51d6e8a9180f/" width="305"></p>
+
+<p> </p>
+
+<p> </p>
+
+<p><img alt="android music player song search" height="524" name="MusicPlayerStage2_05.gif" src="https://ucarecdn.com/e2599031-cbe0-4698-8b00-d8a9392102e6/" width="305"></p>

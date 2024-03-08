@@ -1,0 +1,30 @@
+type: edu
+files:
+  - name: src/test/java/org/hyperskill/musicplayer/internals/AbstractUnitTest.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/CustomMediaPlayerShadow.java
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/CustomShadowCountDownTimer.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/FakeContentProvider.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/MusicPlayerUnitTests.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/SongFake.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/SongFakeRepository.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/TestDatabaseFactory.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/Stage1UnitTestB.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/Stage2UnitTest.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/Stage3UnitTest.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/Stage4UnitTest.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/Stage5UnitTest.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/CustomShadowAsyncDifferConfig.java
+    visible: false
