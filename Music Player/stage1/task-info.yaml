@@ -42,5 +42,7 @@ files:
     visible: false
   - name: src/main/res/raw/wisdom.mp3
     visible: true
-  - name: src/test/java/org/hyperskill/musicplayer/internals/MusicPlayerActivityScreen.kt
+  - name: src/test/java/org/hyperskill/musicplayer/internals/MusicPlayerBaseScreen.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/PlayMusicScreen.kt
     visible: false

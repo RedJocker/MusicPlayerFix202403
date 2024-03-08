@@ -28,3 +28,7 @@ files:
     visible: false
   - name: src/test/java/org/hyperskill/musicplayer/internals/CustomShadowAsyncDifferConfig.java
     visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/PlayMusicScreen.kt
+    visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/MusicPlayerBaseScreen.kt
+    visible: false
