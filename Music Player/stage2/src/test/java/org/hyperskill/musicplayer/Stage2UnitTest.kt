@@ -27,7 +27,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.concurrent.TimeUnit
 
-// version 1.4
+// version 2.0
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowAsyncDifferConfig::class])
 @RunWith(RobolectricTestRunner::class)
 class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java){

@@ -28,3 +28,5 @@ files:
     visible: false
   - name: src/test/java/org/hyperskill/musicplayer/internals/MusicPlayerBaseScreen.kt
     visible: false
+  - name: src/test/java/org/hyperskill/musicplayer/internals/AddPlaylistScreen.kt
+    visible: false

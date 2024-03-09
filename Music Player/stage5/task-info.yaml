@@ -32,3 +32,65 @@ files:
     visible: false
   - name: src/test/java/org/hyperskill/musicplayer/internals/MusicPlayerBaseScreen.kt
     visible: false
+  - name: build.gradle
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/MainActivity.kt
+    visible: true
+  - name: src/main/res/drawable/ic_launcher_background.xml
+    visible: true
+  - name: src/main/res/drawable/ic_pause.xml
+    visible: true
+  - name: src/main/res/drawable/ic_play.xml
+    visible: true
+  - name: src/main/res/drawable-v24/ic_launcher_foreground.xml
+    visible: true
+  - name: src/main/res/layout/activity_main.xml
+    visible: true
+  - name: src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+    visible: true
+  - name: src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+    visible: true
+  - name: src/main/res/values/colors.xml
+    visible: true
+  - name: src/main/res/values/strings.xml
+    visible: true
+  - name: src/main/res/values/styles.xml
+    visible: true
+  - name: src/main/AndroidManifest.xml
+    visible: true
+  - name: src/main/res/menu/options.xml
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/viewModel/PlayListViewModel.kt
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/fragment/MainAddPlaylistFragment.kt
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/data/Playlist.kt
+    visible: true
+  - name: src/main/res/layout/fragment_main_player_controller.xml
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/data/SongSelector.kt
+    visible: true
+  - name: src/main/res/layout/list_item_song.xml
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/adaptor/ListItemSongSelectorAdapter.kt
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/data/Track.kt
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/adaptor/ListItemSongAdapter.kt
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/fragment/MainPlayerControllerFragment.kt
+    visible: true
+  - name: src/main/res/layout/list_item_song_selector.xml
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/data/Song.kt
+    visible: true
+  - name: src/main/res/layout/fragment_main_add_playlist.xml
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/db/musicplayerdatabase.kt
+    visible: true
+  - name: src/main/java/org/hyperskill/musicplayer/db/PlaylistStore.kt
+    visible: true
+  - name: src/main/res/raw/wisdom.mp3
+    visible: true
+  - name: src/test/java/org/hyperskill/musicplayer/internals/AddPlaylistScreen.kt
+    visible: false
