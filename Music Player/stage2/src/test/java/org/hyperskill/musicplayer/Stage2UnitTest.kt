@@ -5,7 +5,8 @@ import android.app.AlertDialog
 import android.graphics.Color
 import android.widget.*
 import org.hyperskill.musicplayer.internals.AddPlaylistScreen
-
+import org.hyperskill.musicplayer.internals.AddPlaylistScreen.Companion.ID_ADD_PLAYLIST_BTN_OK
+import org.hyperskill.musicplayer.internals.AddPlaylistScreen.Companion.ID_SONG_SELECTOR_ITEM_CHECKBOX
 import org.hyperskill.musicplayer.internals.CustomMediaPlayerShadow
 import org.hyperskill.musicplayer.internals.CustomShadowAsyncDifferConfig
 import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.ID_MAIN_BUTTON_SEARCH
@@ -58,7 +59,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             mainSongList.assertListItems(
                 songFakeList,
                 "on init after clicking on $ID_MAIN_BUTTON_SEARCH"
-            ) { itemViewSupplier, index, songFake ->
+            ) { itemViewSupplier, _, songFake ->
                 val itemView = itemViewSupplier()
                 assertSongItem("Wrong data after search.", itemView, songFake)
 
@@ -116,262 +117,264 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkWhenCurrentTrackChangesAndOldCurrentTrackIsPlayingImageChangesToPaused() {
+    fun checkWhenCurrentTrackChangesAndOldCurrentTrackIsPlayingImageChangesToPaused()  = testActivity {
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            val songFakeIndexBefore = 5
+            val songFakeIndexAfter = 7
 
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                val songFakeIndexBefore = 5
-                val songFakeIndexAfter = 7
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndexBefore])
+            mainSongList.assertSingleListItem(songFakeIndexBefore) { itemViewSupplierBefore ->
+                var songItemImgBtnPlayPauseBefore =
+                    songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
+                songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                    "When a song from the song list is stopped " +
+                            "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
 
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndexBefore])
-                mainSongList.assertSingleListItem(songFakeIndexBefore) { itemViewSupplierBefore ->
-                    var songItemImgBtnPlayPauseBefore = songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
-                    songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                songItemImgBtnPlayPauseBefore.clickAndRun()
+                songItemImgBtnPlayPauseBefore =
+                    songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
+
+                songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a stopped song" +
+                            " the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
+
+                CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndexAfter])
+                shadowLooper.idleFor(10_000L, TimeUnit.MILLISECONDS)
+                mainSongList.assertSingleListItem(songFakeIndexAfter) { itemViewSupplierAfter ->
+                    var songItemImgBtnPlayPauseAfter =
+                        songItemImgBtnPlayPauseSupplier(itemViewSupplierAfter)
+                    songItemImgBtnPlayPauseAfter.drawable.assertCreatedFromResourceId(
                         "When a song from the song list is stopped " +
                                 "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
                         R.drawable.ic_play
                     )
 
-                    songItemImgBtnPlayPauseBefore.clickAndRun()
-                    songItemImgBtnPlayPauseBefore = songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
+                    songItemImgBtnPlayPauseAfter.clickAndRun()
+                    songItemImgBtnPlayPauseAfter =
+                        songItemImgBtnPlayPauseSupplier(itemViewSupplierAfter)
 
-                    songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a stopped song" +
-                                " the image displayed should change to R.drawable.ic_pause",
-                        R.drawable.ic_pause
-                    )
-
-                    CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndexAfter])
-                    shadowLooper.idleFor(10_000L, TimeUnit.MILLISECONDS)
-                    mainSongList.assertSingleListItem(songFakeIndexAfter) { itemViewSupplierAfter ->
-                        var songItemImgBtnPlayPauseAfter = songItemImgBtnPlayPauseSupplier(itemViewSupplierAfter)
-                        songItemImgBtnPlayPauseAfter.drawable.assertCreatedFromResourceId(
-                            "When a song from the song list is stopped " +
-                                    "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
-                            R.drawable.ic_play
-                        )
-
-                        songItemImgBtnPlayPauseAfter.clickAndRun()
-                        songItemImgBtnPlayPauseAfter = songItemImgBtnPlayPauseSupplier(itemViewSupplierAfter)
-
-                        songItemImgBtnPlayPauseAfter.drawable.assertCreatedFromResourceId(
-                            "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song " +
-                                    "the image displayed should change to R.drawable.ic_pause",
-                            R.drawable.ic_pause
-                        )
-
-                    }
-                    songItemImgBtnPlayPauseBefore = songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
-
-                    songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
-                        "After changing the currentTrack with the old currentTrack playing" +
-                                "the image displayed on the old currentTrack should change to R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-                }
-            }
-        }
-    }
-
-    @Test
-    fun checkWhenCurrentTrackChangesAndOldCurrentTrackIsNotPlayingImageRemains() {
-
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                val songFakeIndexBefore = 5
-                val songFakeIndexAfter = 7
-
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndexBefore])
-                mainSongList.assertSingleListItem(songFakeIndexBefore) { itemViewSupplierBefore ->
-                    var songItemImgBtnPlayPauseBefore = songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
-
-                    songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
-                        "When a song from the song list is paused the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE " +
-                                "should be R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-
-                    songItemImgBtnPlayPauseBefore.clickAndRun()
-                    songItemImgBtnPlayPauseBefore = songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
-
-                    songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                    songItemImgBtnPlayPauseAfter.drawable.assertCreatedFromResourceId(
                         "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song " +
                                 "the image displayed should change to R.drawable.ic_pause",
                         R.drawable.ic_pause
                     )
 
-                    songItemImgBtnPlayPauseBefore.clickAndRun()
-                    songItemImgBtnPlayPauseBefore = songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
-
-                    songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a playing song " +
-                                "the image displayed should change to R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-
-                    CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndexAfter])
-                    mainSongList.assertSingleListItem(songFakeIndexAfter) { itemViewSupplierAfter ->
-                        var songItemImgBtnPlayPauseAfter = songItemImgBtnPlayPauseSupplier(itemViewSupplierAfter)
-
-                        songItemImgBtnPlayPauseAfter.drawable.assertCreatedFromResourceId(
-                            "When a song from the song list is paused " +
-                                    "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
-                            R.drawable.ic_play
-                        )
-
-                        songItemImgBtnPlayPauseAfter.clickAndRun()
-                        songItemImgBtnPlayPauseAfter = songItemImgBtnPlayPauseSupplier(itemViewSupplierAfter)
-
-                        songItemImgBtnPlayPauseAfter.drawable.assertCreatedFromResourceId(
-                            "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song " +
-                                    "the image displayed should change to R.drawable.ic_pause",
-                            R.drawable.ic_pause
-                        )
-                    }
-
-                    songItemImgBtnPlayPauseBefore = songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
-                    songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
-                        "After changing the currentTrack with the old currentTrack not playing " +
-                                "the image displayed should remain being R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
                 }
+                songItemImgBtnPlayPauseBefore =
+                    songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
+
+                songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                    "After changing the currentTrack with the old currentTrack playing" +
+                            "the image displayed on the old currentTrack should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
             }
         }
+        Unit
     }
 
+
     @Test
-    fun checkAfterInitialSearchFirstListItemIsCurrentTrackAndRespondToControllerPlayPauseButton() {
+    fun checkWhenCurrentTrackChangesAndOldCurrentTrackIsNotPlayingImageRemains() = testActivity {
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            val songFakeIndexBefore = 5
+            val songFakeIndexAfter = 7
 
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndexBefore])
+            mainSongList.assertSingleListItem(songFakeIndexBefore) { itemViewSupplierBefore ->
+                var songItemImgBtnPlayPauseBefore =
+                    songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
 
-                mainSongList.assertSingleListItem(0) { itemViewSupplier ->
+                songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                    "When a song from the song list is paused the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE " +
+                            "should be R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
 
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPauseBefore.clickAndRun()
+                songItemImgBtnPlayPauseBefore =
+                    songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
 
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song " +
+                            "the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
+
+                songItemImgBtnPlayPauseBefore.clickAndRun()
+                songItemImgBtnPlayPauseBefore =
+                    songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
+
+                songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a playing song " +
+                            "the image displayed should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+
+                CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndexAfter])
+                mainSongList.assertSingleListItem(songFakeIndexAfter) { itemViewSupplierAfter ->
+                    var songItemImgBtnPlayPauseAfter =
+                        songItemImgBtnPlayPauseSupplier(itemViewSupplierAfter)
+
+                    songItemImgBtnPlayPauseAfter.drawable.assertCreatedFromResourceId(
                         "When a song from the song list is paused " +
                                 "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
                         R.drawable.ic_play
                     )
 
-                    songItemImgBtnPlayPause.clickAndRun()
+                    songItemImgBtnPlayPauseAfter.clickAndRun()
+                    songItemImgBtnPlayPauseAfter =
+                        songItemImgBtnPlayPauseSupplier(itemViewSupplierAfter)
 
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song" +
-                                " the image displayed should change to R.drawable.ic_pause",
-                        R.drawable.ic_pause
-                    )
-
-                    controllerBtnPlayPause.clickAndRun()
-
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a playing song" +
-                                " the image displayed should change to R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-                }
-            }
-        }
-    }
-
-    @Test
-    fun checkCurrentTrackImgChangeAfterControllerStopButtonClickWithCurrentTrackPlaying() {
-
-        testActivity {
-            PlayMusicScreen(this).apply {
-                val songFakeIndex = 4
-                mainButtonSearch.clickAndRun()
-
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndex])
-                mainSongList.assertSingleListItem(songFakeIndex) { itemViewSupplier ->
-
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
-
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "When a song from the song list is stopped " +
-                                "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-
-                    songItemImgBtnPlayPause.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a stopped song " +
+                    songItemImgBtnPlayPauseAfter.drawable.assertCreatedFromResourceId(
+                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song " +
                                 "the image displayed should change to R.drawable.ic_pause",
                         R.drawable.ic_pause
                     )
-
-                    controllerBtnStop.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_STOP on a playing song " +
-                                "the image displayed should change to R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-
-                    songItemImgBtnPlayPause.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a stopped song " +
-                                "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should change to R.drawable.ic_pause",
-                        R.drawable.ic_pause
-                    )
-
-                    songItemImgBtnPlayPause.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a playing song" +
-                                "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should change to R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-
-                    controllerBtnStop.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_STOP on a paused song " +
-                                "the image displayed should remain R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-
-                    controllerBtnStop.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_STOP on a stopped song " +
-                                "the image displayed should remain R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
                 }
+
+                songItemImgBtnPlayPauseBefore =
+                    songItemImgBtnPlayPauseSupplier(itemViewSupplierBefore)
+                songItemImgBtnPlayPauseBefore.drawable.assertCreatedFromResourceId(
+                    "After changing the currentTrack with the old currentTrack not playing " +
+                            "the image displayed should remain being R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
             }
         }
+        Unit
     }
 
     @Test
-    fun checkListItemImgChangeMixedClicks() {
+    fun checkAfterInitialSearchFirstListItemIsCurrentTrackAndRespondToControllerPlayPauseButton() = testActivity {
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
 
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch
-                mainFragmentContainer
+            mainSongList.assertSingleListItem(0) { itemViewSupplier ->
 
-                val songFakeIndex = 6
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
-                mainButtonSearch.clickAndRun()
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "When a song from the song list is paused " +
+                            "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
 
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndex])
-                mainSongList.assertSingleListItem(songFakeIndex) { itemViewSupplier ->
+                songItemImgBtnPlayPause.clickAndRun()
 
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song" +
+                            " the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
 
-                    for (i in 1..10) {
-                        /*
+                controllerBtnPlayPause.clickAndRun()
+
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a playing song" +
+                            " the image displayed should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+            }
+        }
+        Unit
+    }
+
+    @Test
+    fun checkCurrentTrackImgChangeAfterControllerStopButtonClickWithCurrentTrackPlaying() = testActivity {
+        PlayMusicScreen(this).apply {
+            val songFakeIndex = 4
+            mainButtonSearch.clickAndRun()
+
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndex])
+            mainSongList.assertSingleListItem(songFakeIndex) { itemViewSupplier ->
+
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "When a song from the song list is stopped " +
+                            "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+
+                songItemImgBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a stopped song " +
+                            "the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
+
+                controllerBtnStop.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_STOP on a playing song " +
+                            "the image displayed should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+
+                songItemImgBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a stopped song " +
+                            "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
+
+                songItemImgBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a playing song" +
+                            "the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+
+                controllerBtnStop.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_STOP on a paused song " +
+                            "the image displayed should remain R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+
+                controllerBtnStop.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_STOP on a stopped song " +
+                            "the image displayed should remain R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+            }
+        }
+        Unit
+    }
+
+    @Test
+    fun checkListItemImgChangeMixedClicks() = testActivity {
+        PlayMusicScreen(this).apply {
+            mainButtonSearch
+            mainFragmentContainer
+
+            val songFakeIndex = 6
+
+            mainButtonSearch.clickAndRun()
+
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[songFakeIndex])
+            mainSongList.assertSingleListItem(songFakeIndex) { itemViewSupplier ->
+
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                for (i in 1..10) {
+                    /*
                         1 - paused -> songItemImgBtnPlayPause -> playing
                         2 - playing -> controllerBtnPlayPause -> paused
                         3 - paused -> controllerBtnPlayPause -> playing
@@ -384,559 +387,461 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                         10 - playing -> songItemImgBtnPlayPause -> paused
                      */
 
-                        val buttonClickedId = if (i == 6) {
-                            controllerBtnStop.clickAndRun()
-                            songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                            songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                                "After clicking on $ID_CONTROLLER_BTN_STOP on a playing song the image displayed should change to R.drawable.ic_play",
-                                R.drawable.ic_play
-                            )
-                            continue
-                        } else if (i % 3 == 1) {
-                            songItemImgBtnPlayPause.clickAndRun()
-                            songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                            ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE
-                        } else {
-                            controllerBtnPlayPause.clickAndRun()
-                            songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                            ID_CONTROLLER_BTN_PLAY_PAUSE
-                        }
+                    val buttonClickedId = if (i == 6) {
+                        controllerBtnStop.clickAndRun()
+                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                            "After clicking on $ID_CONTROLLER_BTN_STOP on a playing song the image displayed should change to R.drawable.ic_play",
+                            R.drawable.ic_play
+                        )
+                        continue
+                    } else if (i % 3 == 1) {
+                        songItemImgBtnPlayPause.clickAndRun()
+                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                        ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE
+                    } else {
+                        controllerBtnPlayPause.clickAndRun()
+                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                        ID_CONTROLLER_BTN_PLAY_PAUSE
+                    }
 
-                        if (i % 2 == 1) {
-                            songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                                "After clicking on $buttonClickedId on a paused song the image displayed should change to R.drawable.ic_pause",
-                                R.drawable.ic_pause
-                            )
-                        } else {
-                            songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                                "After clicking on $buttonClickedId on a playing song the image displayed should change to R.drawable.ic_play",
-                                R.drawable.ic_play
-                            )
-                        }
+                    if (i % 2 == 1) {
+                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                            "After clicking on $buttonClickedId on a paused song the image displayed should change to R.drawable.ic_pause",
+                            R.drawable.ic_pause
+                        )
+                    } else {
+                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                            "After clicking on $buttonClickedId on a playing song the image displayed should change to R.drawable.ic_play",
+                            R.drawable.ic_play
+                        )
                     }
                 }
             }
         }
+        Unit
     }
 
     @Test
-    fun checkAddPlaylistStateTriggeredByMenuItem() {
-
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch
-                mainSongList
-
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, index, itemSongFake ->
-                    val listItemView = itemViewSupplier()
-                    // check songSelector items
-                    val songSelectorItemTvTitle: TextView =
-                        listItemView.findViewByString("songSelectorItemTvTitle")
-                    val songSelectorItemTvArtist: TextView =
-                        listItemView.findViewByString("songSelectorItemTvArtist")
-                    val songSelectorItemTvDuration: TextView =
-                        listItemView.findViewByString("songSelectorItemTvDuration")
-                    val songSelectorItemCheckBox: CheckBox =
-                        listItemView.findViewByString("songSelectorItemCheckBox")
-
-                    val actualSongTitle = songSelectorItemTvTitle.text.toString()
-                    assertEquals(
-                        "songSelectorItemTvTitle with incorrect text",
-                        actualSongTitle,
-                        itemSongFake.title
+    fun checkAddPlaylistStateTriggeredByMenuItem() = testActivity {
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+                SongSelectorItemBindings(itemViewSupplier).apply {
+                    assertSongSelectorInfo(
+                        "On addPlaylist after clicking $mainMenuItemIdAddPlaylist",
+                        song
                     )
-
-                    val actualSongArtist = songSelectorItemTvArtist.text.toString()
                     assertEquals(
-                        "songSelectorItemTvArtist with incorrect text",
-                        actualSongArtist,
-                        itemSongFake.artist
-                    )
-
-                    val actualSongDuration = songSelectorItemTvDuration.text.toString()
-                    val expectedSongDuration = itemSongFake.duration.timeString()
-                    assertEquals(
-                        "songSelectorItemTvDuration with incorrect text",
-                        expectedSongDuration,
-                        actualSongDuration,
-                    )
-
-                    assertEquals(
-                        "No songSelectorItemCheckBox should be checked after click on $mainMenuItemIdAddPlaylist",
+                        "No $ID_SONG_SELECTOR_ITEM_CHECKBOX " +
+                                "should be checked after click on $mainMenuItemIdAddPlaylist",
                         false,
                         songSelectorItemCheckBox.isChecked
                     )
-
-                    listItemView.assertBackgroundColor(
-                        errorMessage = "The backgroundColor for all songSelectorItems should be Color.WHITE after click on $mainMenuItemIdAddPlaylist",
+                    itemView.assertBackgroundColor(
+                        errorMessage = "The backgroundColor for all songSelectorItems " +
+                                "should be Color.WHITE after click on $mainMenuItemIdAddPlaylist",
                         expectedBackgroundColor = Color.WHITE
                     )
-                    //
                 }
-
-                mainFragmentContainer.findViewByString<Button>("addPlaylistBtnCancel")
-                    .also { addPlaylistBtnCancel ->
-                        assertEquals(
-                            "Wrong text for addPlaylistBtnCancel",
-                            "cancel",
-                            addPlaylistBtnCancel.text.toString().lowercase()
-                        )
-                    }
-                mainFragmentContainer.findViewByString<Button>("addPlaylistBtnOk")
-                    .also { addPlaylistBtnOk ->
-                        assertEquals(
-                            "Wrong text for addPlaylistBtnOk",
-                            "ok",
-                            addPlaylistBtnOk.text.toString().lowercase()
-                        )
-                    }
-                mainFragmentContainer.findViewByString<EditText>("addPlaylistEtPlaylistName")
-                    .also { addPlaylistEtPlaylistName ->
-                        assertEquals(
-                            "Wrong hint for addPlaylistEtPlaylistName",
-                            "playlist name",
-                            addPlaylistEtPlaylistName.hint.toString().lowercase()
-                        )
-                    }
+                //
             }
         }
+        Unit
     }
 
     @Test
-    fun checkAddingPlaylistWithEmptyListAddedToastErrorEmptyListMessage() {
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch
-                mainSongList
-
-                mainButtonSearch.clickAndRun()
-            }
-            AddPlaylistScreen(this).apply {
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-
-                val playlistName = "My Playlist"
-
-                val addPlaylistButtonOk =
-                    mainFragmentContainer.findViewByString<Button>("addPlaylistBtnOk")
-
-                val addPlaylistEtPlaylistName =
-                    mainFragmentContainer.findViewByString<EditText>("addPlaylistEtPlaylistName")
-                addPlaylistEtPlaylistName.setText(playlistName)
-
-                addPlaylistButtonOk.clickAndRun()
-
-                assertLastToastMessageEquals(
-                    errorMessage = "When there is no song selected a toast message is expected after click on addPlaylistBtnOk",
-                    expectedMessage = "Add at least one song to your playlist"
-                )
-            }
+    fun checkAddingPlaylistWithEmptyListAddedToastErrorEmptyListMessage() = testActivity {
+        val playlistName = "My Playlist"
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
         }
+        AddPlaylistScreen(this).apply {
+            addPlaylistEtPlaylistName.setText(playlistName)
+            addPlaylistButtonOk.clickAndRun()
+            assertLastToastMessageEquals(
+                errorMessage = "When there is no song selected a toast message is expected after click on $ID_ADD_PLAYLIST_BTN_OK",
+                expectedMessage = "Add at least one song to your playlist"
+            )
+        }
+        Unit
     }
 
     @Test
-    fun checkAddingPlaylistWithBothEmptyListAndEmptyPlaylistNameToastErrorEmptyListMessage() {
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch
-                mainSongList
+    fun checkAddingPlaylistWithBothEmptyListAndEmptyPlaylistNameToastErrorEmptyListMessage() = testActivity {
+        PlayMusicScreen(this).apply {
+            mainButtonSearch
+            mainSongList
 
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-
-                val addPlaylistButtonOk =
-                    mainFragmentContainer.findViewByString<Button>("addPlaylistBtnOk")
-
-                addPlaylistButtonOk.clickAndRun()
-
-                assertLastToastMessageEquals(
-                    errorMessage = "When there is no song selected a toast message is expected after click on addPlaylistBtnOk",
-                    expectedMessage = "Add at least one song to your playlist"
-                )
-            }
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
         }
+        AddPlaylistScreen(this).apply {
+            addPlaylistButtonOk.clickAndRun()
+            assertLastToastMessageEquals(
+                errorMessage = "When there is no song selected a toast message is expected after click on $ID_ADD_PLAYLIST_BTN_OK",
+                expectedMessage = "Add at least one song to your playlist"
+            )
+        }
+        Unit
     }
 
     @Test
-    fun checkAddingPlaylistWithReservedPlaylistNameAllSongsToastErrorReservedNameMessage() {
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch
-                mainSongList
+    fun checkAddingPlaylistWithReservedPlaylistNameAllSongsToastErrorReservedNameMessage() = testActivity {
+        val playlistName = "All Songs"
 
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                val addPlaylistButtonOk =
-                    mainFragmentContainer.findViewByString<Button>("addPlaylistBtnOk")
+        PlayMusicScreen(this).apply {
+            mainButtonSearch
+            mainSongList
 
-                val playlistName = "All Songs"
-                val addPlaylistEtPlaylistName =
-                    mainFragmentContainer.findViewByString<EditText>("addPlaylistEtPlaylistName")
-
-                mainSongList.assertSingleListItem(0) {
-                    it().clickAndRun()
-                }
-
-                addPlaylistEtPlaylistName.setText(playlistName)
-                addPlaylistButtonOk.clickAndRun()
-
-                assertLastToastMessageEquals(
-                    errorMessage = "All Songs should be a reserve name. A toast with message",
-                    expectedMessage = "All Songs is a reserved name choose another playlist name"
-                )
-            }
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
         }
+        AddPlaylistScreen(this).apply {
+            mainSongList.assertSingleListItem(0) {
+                it().clickAndRun()
+            }
+            addPlaylistEtPlaylistName.setText(playlistName)
+            addPlaylistButtonOk.clickAndRun()
+            assertLastToastMessageEquals(
+                errorMessage = "All Songs should be a reserved name. A toast was expected with message",
+                expectedMessage = "All Songs is a reserved name choose another playlist name"
+            )
+        }
+        Unit
     }
 
     @Test
-    fun checkLoadPlaylistInPlayMusicStateAfterAddingPlaylistWithMainMenuItem() {
+    fun checkLoadPlaylistInPlayMusicStateAfterAddingPlaylistWithMainMenuItem() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val testedItemsOneBasedIndexes = listOf(2, 4, 7)
+        val playlistName = "My Playlist"
 
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val testedItemsOneBasedIndexes = listOf(2, 4, 7)
-            val playlistName = "My Playlist"
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer,
+                testEmptyName = true
+            )
+        }
+        PlayMusicScreen(this).apply {
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes[0]])
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
 
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer,
-                    testEmptyName = true
+            val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
+
+            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, song ->
+
+                assertSongItem(
+                    "Wrong list item after playlist loaded",
+                    itemViewSupplier(),
+                    song
                 )
-            }
-            PlayMusicScreen(this).apply {
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes[0]])
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
+                CustomMediaPlayerShadow.setFakeSong(song)
+
+                // check image changes after playlist loaded
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "When a song from the song list is paused the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
+                    R.drawable.ic_play
                 )
 
-                val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
+                songItemImgBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
-                mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, position, song ->
-
-                    assertSongItem(
-                        "Wrong list item after playlist loaded",
-                        itemViewSupplier(),
-                        song
-                    )
-                    CustomMediaPlayerShadow.setFakeSong(song)
-
-                    // check image changes after playlist loaded
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "When a song from the song list is paused the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-
-                    songItemImgBtnPlayPause.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song the image displayed should change to R.drawable.ic_pause",
-                        R.drawable.ic_pause
-                    )
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
 
 
-                    controllerBtnPlayPause.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                controllerBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_PLAY_PAUSE on a playing song the image displayed should change to R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_PLAY_PAUSE on a playing song the image displayed should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
 
-                    controllerBtnPlayPause.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                controllerBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_PLAY_PAUSE on a paused song the image displayed should change to R.drawable.ic_pause",
-                        R.drawable.ic_pause
-                    )
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_PLAY_PAUSE on a paused song the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
 
-                    controllerBtnStop.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                controllerBtnStop.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_STOP on a playing song the image displayed should change to R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-                }
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_STOP on a playing song the image displayed should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
             }
         }
+        Unit
     }
 
     @Test
-    fun checkLoadPlaylistInPlayMusicStateAfterAddingPlaylistWithLongClick() {
+    fun checkLoadPlaylistInPlayMusicStateAfterAddingPlaylistWithLongClick() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(4, 7, 8)
+        val testedItemsOneBasedIndexes = testedItemsZeroBasedIndexes.map { it + 1 }
+        val longClickItemZeroBasedIndex = 5
+        val longClickItemOneBasedIndex = longClickItemZeroBasedIndex + 1
+        val playlistName = "My Playlist"
 
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(4, 7, 8)
-            val testedItemsOneBasedIndexes = testedItemsZeroBasedIndexes.map { it + 1 }
-            val longClickItemZeroBasedIndex = 5
-            val longClickItemOneBasedIndex = longClickItemZeroBasedIndex + 1
-            val playlistName = "My Playlist"
-
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                mainSongList.assertSingleListItem(longClickItemZeroBasedIndex) {
-                    it().clickLongAndRun()
-                }
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            mainSongList.assertSingleListItem(longClickItemZeroBasedIndex) {
+                it().clickLongAndRun()
             }
+        }
 
-            AddPlaylistScreen(this).apply {
-                // check long click item is checked and deselect item
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, item ->
-                    when (item.id) {
-                        longClickItemOneBasedIndex -> {
-                            val itemView = itemViewSupplier()
-                            val songSelectorItemCheckBox =
-                                itemView.findViewByString<CheckBox>("songSelectorItemCheckBox")
-
+        AddPlaylistScreen(this).apply {
+            // check long click item is checked and deselect item
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+                when (item.id) {
+                    longClickItemOneBasedIndex -> {
+                        SongSelectorItemBindings(itemViewSupplier).apply {
                             assertEquals(
-                                "On the item that received a long click songSelectorItemCheckBox should be check.",
+                                "On the item that received a long click $ID_SONG_SELECTOR_ITEM_CHECKBOX should be check.",
                                 true,
                                 songSelectorItemCheckBox.isChecked
                             )
-
                             itemView.assertBackgroundColor(
                                 "On the item that received a long click background color should be Color.LT_GRAY.",
                                 Color.LTGRAY
                             )
-
                             itemView.clickAndRun()  // deselect
                         }
-
-                        else -> {}
                     }
-                }
-                //
 
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer,
-                    testEmptyName = true
+                    else -> {}
+                }
+            }
+            //
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer,
+                testEmptyName = true
+            )
+        }
+        PlayMusicScreen(this).apply {
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes.first()])
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
+
+            val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
+
+            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, song ->
+                assertSongItem(
+                    "Wrong list item after playlist loaded",
+                    itemViewSupplier(),
+                    song
+                )
+                CustomMediaPlayerShadow.setFakeSong(song)
+
+                // check image changes after load
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "When a song from the song list is paused the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+
+                songItemImgBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
+
+                controllerBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_PLAY_PAUSE on a playing song the image displayed should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+
+                controllerBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_PLAY_PAUSE on a paused song the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
+
+                controllerBtnStop.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_CONTROLLER_BTN_STOP on a playing song the image displayed should change to R.drawable.ic_play",
+                    R.drawable.ic_play
+                )
+                //
+            }
+        }
+        Unit
+    }
+
+    @Test
+    fun checkLoadPlaylistOnPlayMusicStateWithCurrentTrackKeepsCurrentTrack() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
+        val playlistName = "My Playlist"
+
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedSongZeroIndex])
+            mainSongList.assertSingleListItem(selectedSongZeroIndex) { itemViewSupplier ->
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
                 )
             }
-            PlayMusicScreen(this).apply {
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes.first()])
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
-                )
 
-                val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer
+            )
+        }
+        PlayMusicScreen(this).apply {
 
-                mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, position, song ->
-                    assertSongItem(
-                        "Wrong list item after playlist loaded",
-                        itemViewSupplier(),
-                        song
-                    )
-                    CustomMediaPlayerShadow.setFakeSong(song)
+            // check item keeps selected state after list add
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
-                    // check image changes after load
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
+                if (item.id == selectedSongZeroIndex + 1) {
                     songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "When a song from the song list is paused the image of $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE should be R.drawable.ic_play",
-                        R.drawable.ic_play
-                    )
-
-                    songItemImgBtnPlayPause.clickAndRun()
-                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
-                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song the image displayed should change to R.drawable.ic_pause",
+                        "The selected song should remain selected after adding a playlist",
                         R.drawable.ic_pause
                     )
 
                     controllerBtnPlayPause.clickAndRun()
                     songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
                     songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_PLAY_PAUSE on a playing song the image displayed should change to R.drawable.ic_play",
+                        "The selected song should remain responding to $ID_CONTROLLER_BTN_PLAY_PAUSE clicks after adding a playlist",
                         R.drawable.ic_play
                     )
 
-                    controllerBtnPlayPause.clickAndRun()
+                    songItemImgBtnPlayPause.clickAndRun()
                     songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
                     songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_PLAY_PAUSE on a paused song the image displayed should change to R.drawable.ic_pause",
+                        "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist",
                         R.drawable.ic_pause
                     )
 
                     controllerBtnStop.clickAndRun()
                     songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
                     songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_CONTROLLER_BTN_STOP on a playing song the image displayed should change to R.drawable.ic_play",
+                        "The selected song should remain responding to $ID_CONTROLLER_BTN_STOP clicks after adding a playlist",
                         R.drawable.ic_play
                     )
-                    //
-                }
-            }
-        }
-    }
-
-    @Test
-    fun checkLoadPlaylistOnPlayMusicStateWithCurrentTrackKeepsCurrentTrack() {
-
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
-            val playlistName = "My Playlist"
-
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedSongZeroIndex])
-                mainSongList.assertSingleListItem(selectedSongZeroIndex) { itemViewSupplier ->
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                     songItemImgBtnPlayPause.clickAndRun()
                     songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE the image displayed should change to R.drawable.ic_pause",
+                        "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist",
                         R.drawable.ic_pause
                     )
+
+                } else {
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "A unselected song should remain unselected after adding a playlist",
+                        R.drawable.ic_play
+                    )
                 }
-
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
             }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer
-                )
-            }
-            PlayMusicScreen(this).apply {
+            //
 
-                // check item keeps selected state after list add
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, item ->
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
 
-                    if (item.id == selectedSongZeroIndex + 1) {
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain selected after adding a playlist",
-                            R.drawable.ic_pause
-                        )
+            // check item keeps selected state after list load
+            mainSongList.assertListItems(
+                testedItemsZeroBasedIndexes.map { songFakeList[it] }) { itemViewSupplier, _, item ->
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
-                        val controllerUi = mainFragmentContainer.getControllerViews()
+                if (item.id == selectedSongZeroIndex + 1) {
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The selected song should remain selected after loading a playlist",
+                        R.drawable.ic_pause
+                    )
 
-                        controllerUi.btnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain responding to $ID_CONTROLLER_BTN_PLAY_PAUSE clicks after adding a playlist",
-                            R.drawable.ic_play
-                        )
+                    controllerBtnPlayPause.clickAndRun()
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The selected song should remain responding to $ID_CONTROLLER_BTN_PLAY_PAUSE clicks after loading a playlist",
+                        R.drawable.ic_play
+                    )
 
-                        songItemImgBtnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist",
-                            R.drawable.ic_pause
-                        )
+                    songItemImgBtnPlayPause.clickAndRun()
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after loading a playlist",
+                        R.drawable.ic_pause
+                    )
 
-                        controllerUi.btnStop.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain responding to $ID_CONTROLLER_BTN_STOP clicks after adding a playlist",
-                            R.drawable.ic_play
-                        )
+                    controllerBtnStop.clickAndRun()
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The selected song should remain responding to $ID_CONTROLLER_BTN_STOP clicks after loading a playlist",
+                        R.drawable.ic_play
+                    )
 
-                        songItemImgBtnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist",
-                            R.drawable.ic_pause
-                        )
+                    songItemImgBtnPlayPause.clickAndRun()
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after loading a playlist",
+                        R.drawable.ic_pause
+                    )
 
-                    } else {
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "A unselected song should remain unselected after adding a playlist",
-                            R.drawable.ic_play
-                        )
-                    }
+                } else {
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "A unselected song should remain unselected after loading a playlist",
+                        R.drawable.ic_play
+                    )
                 }
-                //
-
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
-                )
-
-                // check item keeps selected state after list load
-                mainSongList.assertListItems(
-                    testedItemsZeroBasedIndexes.map { songFakeList[it] }) { itemViewSupplier, position, item ->
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
-                    if (item.id == selectedSongZeroIndex + 1) {
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain selected after loading a playlist",
-                            R.drawable.ic_pause
-                        )
-
-                        val controllerUi = mainFragmentContainer.getControllerViews()
-
-                        controllerUi.btnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain responding to $ID_CONTROLLER_BTN_PLAY_PAUSE clicks after loading a playlist",
-                            R.drawable.ic_play
-                        )
-
-                        songItemImgBtnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after loading a playlist",
-                            R.drawable.ic_pause
-                        )
-
-                        controllerUi.btnStop.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain responding to $ID_CONTROLLER_BTN_STOP clicks after loading a playlist",
-                            R.drawable.ic_play
-                        )
-
-                        songItemImgBtnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after loading a playlist",
-                            R.drawable.ic_pause
-                        )
-
-                    } else {
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "A unselected song should remain unselected after loading a playlist",
-                            R.drawable.ic_play
-                        )
-                    }
-                }
-                //
             }
+            //
         }
+        Unit
     }
 
     @Test
@@ -964,7 +869,6 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
             }
             AddPlaylistScreen(this).apply {
-
                 addPlaylist(
                     playlistName = playlistName,
                     selectedItemsIndex = testedItemsZeroBasedIndexes,
@@ -974,7 +878,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             }
             PlayMusicScreen(this).apply {
                 // check item keeps selected state after list add
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, item ->
+                mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
                     var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                     if (item.id == selectedSongZeroIndex + 1) {
@@ -983,9 +887,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                             R.drawable.ic_pause
                         )
 
-                        val controllerUi = mainFragmentContainer.getControllerViews()
-
-                        controllerUi.btnPlayPause.clickAndRun()
+                        controllerBtnPlayPause.clickAndRun()
                         songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                         songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
                             "The selected song should remain responding to $ID_CONTROLLER_BTN_PLAY_PAUSE clicks after adding a playlist",
@@ -999,7 +901,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                             R.drawable.ic_pause
                         )
 
-                        controllerUi.btnStop.clickAndRun()
+                        controllerBtnStop.clickAndRun()
                         songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                         songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
                             "The selected song should remain responding to $ID_CONTROLLER_BTN_STOP clicks after adding a playlist",
@@ -1031,13 +933,11 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
                 // check default item selected after list load
                 mainSongList.assertListItems(
-                    testedItemsZeroBasedIndexes.map { songFakeList[it] }) { itemViewSupplier, position, item ->
+                    testedItemsZeroBasedIndexes.map { songFakeList[it] }) { itemViewSupplier, position, _ ->
                     var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                     if (position == 0) {
-                        val controllerUi = mainFragmentContainer.getControllerViews()
-
-                        controllerUi.btnPlayPause.clickAndRun()
+                        controllerBtnPlayPause.clickAndRun()
                         songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                         songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
                             "The first song should be the currentTrack after loading a playlist " +
@@ -1045,7 +945,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                             R.drawable.ic_pause
                         )
 
-                        controllerUi.btnStop.clickAndRun()
+                        controllerBtnStop.clickAndRun()
                         songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                         songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
                             "The currentTrack should remain responding " +
@@ -1101,27 +1001,22 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             }
             AddPlaylistScreen(this).apply {
                 // check default playlist "All Songs" in ADD_PLAYLIST state and select items
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, item ->
-                    var itemView = itemViewSupplier()
-                    var checkBox =
-                        itemView.findViewByString<CheckBox>("songSelectorItemCheckBox")
-
+                mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+                    var songSelectorItemBindings = SongSelectorItemBindings(itemViewSupplier)
                     assertEquals(
                         "No songSelectorItemCheckBox should be checked after click on mainMenuItemIdAddPlaylist",
                         false,
-                        checkBox.isChecked
+                        songSelectorItemBindings.songSelectorItemCheckBox.isChecked
                     )
 
                     if (item.id in playlistBItemsOneBasedIndexes) {
-                        itemView.clickAndRun()
-                        itemView = itemViewSupplier()
-                        checkBox = itemView.findViewByString<CheckBox>("songSelectorItemCheckBox")
-
+                        songSelectorItemBindings.itemView.clickAndRun()
+                        songSelectorItemBindings = SongSelectorItemBindings(itemViewSupplier)
 
                         assertEquals(
-                            "songSelectorItemCheckBox should be checked after click on list item",
+                            "$ID_SONG_SELECTOR_ITEM_CHECKBOX should be checked after click on list item",
                             true,
-                            checkBox.isChecked
+                            songSelectorItemBindings.songSelectorItemCheckBox.isChecked
                         )
                     }
                 }
@@ -1136,7 +1031,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 // check loaded playlist in ADD_PLAYLIST state keeps selected items
                 mainSongList.assertListItems(
                     songFakeList.filter { it.id in playlistAItemsOneBasedIndexes }
-                ) { itemViewSupplier, position, item ->
+                ) { itemViewSupplier, _, item ->
 
                     val checkBox =
                         itemViewSupplier().findViewByString<CheckBox>("songSelectorItemCheckBox")
@@ -1163,830 +1058,756 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistInAddPlaylistStateKeepsCurrentTrackWhenReturningToPlayMusicState() {
+    fun checkLoadPlaylistInAddPlaylistStateKeepsCurrentTrackWhenReturningToPlayMusicState() = testActivity {
+        val playlistItemsZeroBasedIndexes = listOf(0, 3, 6, 7, 8, 9)
+        val selectedItem = 1
+        val playlistName = "Party Songs"
 
-        testActivity {
-            val playlistItemsZeroBasedIndexes = listOf(0, 3, 6, 7, 8, 9)
-            val selectedItem = 1
-            val playlistName = "Party Songs"
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
 
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedItem])
-                mainSongList.assertSingleListItem(selectedItem) { itemViewSupplier ->
-                    songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        .clickAndRun()
-                }
-
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = playlistItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer,
-                )
-            }
-            PlayMusicScreen(this).apply {
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
-                )
-
-                mainFragmentContainer
-                    .findViewByString<Button>("addPlaylistBtnCancel")
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedItem])
+            mainSongList.assertSingleListItem(selectedItem) { itemViewSupplier ->
+                songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     .clickAndRun()
             }
-            PlayMusicScreen(this).apply {
 
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
-                    assertSongItem(
-                        "The currentPlaylist should not change " +
-                                "after loading a playlist in ADD_PLAYLIST state",
-                        itemViewSupplier(), song
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = playlistItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer,
+            )
+        }
+        PlayMusicScreen(this).apply {
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
+            addPlaylistBtnCancel.clickAndRun()
+        }
+        PlayMusicScreen(this).apply {
+
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
+                assertSongItem(
+                    "The currentPlaylist should not change " +
+                            "after loading a playlist in ADD_PLAYLIST state",
+                    itemViewSupplier(), song
+                )
+                val songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                if (position == selectedItem) {
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The currentTrack should keep its playing state " +
+                                "after loading a playlist on ADD_PLAYLIST state and returning to PLAY_MUSIC state",
+                        R.drawable.ic_pause
                     )
-                    val songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
-                    if (position == selectedItem) {
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The currentTrack should keep its playing state " +
-                                    "after loading a playlist on ADD_PLAYLIST state and returning to PLAY_MUSIC state",
-                            R.drawable.ic_pause
-                        )
-                    } else {
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "A track that is not the currentTrack should not be playing",
-                            R.drawable.ic_play
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    @Test
-    fun checkPlaylistSavedAfterSelectingSongsAfterLoadingPlaylistInAddPlaylistState() {
-
-        testActivity {
-            val playlistOne = listOf(1, 2, 3)
-            val selectItemsOne = listOf(0, 1)
-            val selectItemsTwo = listOf(2, 3)
-            val playlistName1 = "playlist1"
-            val playlistName2 = "playlist2"
-            val loadPlaylistOneSongs = songFakeList.filter { it.id - 1 in playlistOne }
-
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = playlistName1,
-                    selectedItemsIndex = playlistOne,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer
-                )
-            }
-            PlayMusicScreen(this).apply {
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, item ->
-                    if (item.id - 1 in selectItemsOne) {
-                        itemViewSupplier().clickAndRun()
-                    }
-                }
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName1),
-                    playlistToLoadIndex = 1
-                )
-
-
-                mainSongList.assertListItems(loadPlaylistOneSongs) { itemViewSupplier, position, item ->
-                    if (item.id - 1 in selectItemsTwo) {
-                        itemViewSupplier().clickAndRun()
-                    }
-                }
-                mainFragmentContainer.findViewByString<EditText>("addPlaylistEtPlaylistName")
-                    .apply {
-                        setText(playlistName2)
-                    }
-                mainFragmentContainer.findViewByString<Button>("addPlaylistBtnOk").clickAndRun()
-            }
-            PlayMusicScreen(this).apply {
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[playlistOne.first()])
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName1, playlistName2),
-                    playlistToLoadIndex = 2
-                )
-                val messageItemsSaved =
-                    "The playlist saved should contain the selected items when clicking addPlaylistBtnOk"
-                mainSongList.assertListItems(loadPlaylistOneSongs) { itemViewSupplier, position, song ->
-                    assertSongItem(messageItemsSaved, itemViewSupplier(), song)
-                }
-            }
-        }
-    }
-
-    @Test
-    fun checkCancellingAddPlaylistKeepsCurrentPlaylist() {
-
-        testActivity {
-            val playlistAItemsZeroBasedIndexes = listOf(3, 7, 8)
-            val playlistAItemsOneBasedIndexes = playlistAItemsZeroBasedIndexes.map { it + 1 }
-            val playlistName = "Cool Songs"
-            val playlistSongFake =
-                songFakeList.filter { it.id in playlistAItemsOneBasedIndexes }
-
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = playlistAItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer,
-                    testEmptyName = true
-                )
-            }
-            PlayMusicScreen(this).apply {
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[playlistAItemsZeroBasedIndexes[0]])
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
-                )
-
-                // check loaded items
-                mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, position, song ->
-                    assertSongItem(
-                        "Wrong list item after playlist loaded",
-                        itemViewSupplier(),
-                        song
+                } else {
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "A track that is not the currentTrack should not be playing",
+                        R.drawable.ic_play
                     )
                 }
-                //
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                // canceling an add playlist
-                mainFragmentContainer.findViewByString<Button>("addPlaylistBtnCancel").clickAndRun()
-            }
-            PlayMusicScreen(this).apply {
-
-                // check loaded items remains
-                mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, position, item ->
-                    val messageWrongListItemAfterCancel =
-                        "Playlist loaded should remain after addPlaylistBtnCancel clicked"
-                    assertSongItem(messageWrongListItemAfterCancel, itemViewSupplier(), item)
-                }
-                //
             }
         }
+        Unit
     }
 
     @Test
-    fun checkCancelingAddPlaylistKeepsCurrentTrackPlayingState() {
+    fun checkPlaylistSavedAfterSelectingSongsAfterLoadingPlaylistInAddPlaylistState() = testActivity {
+        val playlistOne = listOf(1, 2, 3)
+        val selectItemsOne = listOf(0, 1)
+        val selectItemsTwo = listOf(2, 3)
+        val playlistName1 = "playlist1"
+        val playlistName2 = "playlist2"
+        val loadPlaylistOneSongs = songFakeList.filter { it.id - 1 in playlistOne }
 
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName1,
+                selectedItemsIndex = playlistOne,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer
+            )
+        }
+        PlayMusicScreen(this).apply {
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+                if (item.id - 1 in selectItemsOne) {
+                    itemViewSupplier().clickAndRun()
+                }
+            }
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName1),
+                playlistToLoadIndex = 1
+            )
+            mainSongList.assertListItems(loadPlaylistOneSongs) { itemViewSupplier, _, item ->
+                if (item.id - 1 in selectItemsTwo) {
+                    itemViewSupplier().clickAndRun()
+                }
+            }
+            addPlaylistEtPlaylistName.setText(playlistName2)
+            addPlaylistButtonOk.clickAndRun()
+        }
+        PlayMusicScreen(this).apply {
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[playlistOne.first()])
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName1, playlistName2),
+                playlistToLoadIndex = 2
+            )
+            val messageItemsSaved =
+                "The playlist saved should contain the selected items when clicking addPlaylistBtnOk"
+            mainSongList.assertListItems(loadPlaylistOneSongs) { itemViewSupplier, _, song ->
+                assertSongItem(messageItemsSaved, itemViewSupplier(), song)
+            }
+        }
+        Unit
+    }
 
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
+    @Test
+    fun checkCancellingAddPlaylistKeepsCurrentPlaylist() = testActivity {
+        val playlistAItemsZeroBasedIndexes = listOf(3, 7, 8)
+        val playlistAItemsOneBasedIndexes = playlistAItemsZeroBasedIndexes.map { it + 1 }
+        val playlistName = "Cool Songs"
+        val playlistSongFake =
+            songFakeList.filter { it.id in playlistAItemsOneBasedIndexes }
 
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedSongZeroIndex])
-                mainSongList.assertSingleListItem(selectedSongZeroIndex) { itemViewSupplier ->
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = playlistAItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer,
+                testEmptyName = true
+            )
+        }
+        PlayMusicScreen(this).apply {
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[playlistAItemsZeroBasedIndexes[0]])
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
+
+            // check loaded items
+            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, song ->
+                assertSongItem(
+                    "Wrong list item after playlist loaded",
+                    itemViewSupplier(),
+                    song
+                )
+            }
+            //
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylistBtnCancel.clickAndRun()
+        }
+        PlayMusicScreen(this).apply {
+
+            // check loaded items remains
+            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, item ->
+                val messageWrongListItemAfterCancel =
+                    "Playlist loaded should remain after addPlaylistBtnCancel clicked"
+                assertSongItem(messageWrongListItemAfterCancel, itemViewSupplier(), item)
+            }
+            //
+        }
+        Unit
+    }
+
+    @Test
+    fun checkCancelingAddPlaylistKeepsCurrentTrackPlayingState() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
+
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedSongZeroIndex])
+            mainSongList.assertSingleListItem(selectedSongZeroIndex) { itemViewSupplier ->
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.clickAndRun()
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                    "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE " +
+                            "the image displayed should change to R.drawable.ic_pause",
+                    R.drawable.ic_pause
+                )
+            }
+
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylistBtnCancel.clickAndRun()
+        }
+        PlayMusicScreen(this).apply {
+            // check item keeps selected state after cancel add list
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
+                if (item.id == selectedSongZeroIndex + 1) {
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The currentTrack should remain being the currentTrack " +
+                                "after canceling adding a playlist",
+                        R.drawable.ic_pause
+                    )
+                    controllerBtnPlayPause.clickAndRun()
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The currentTrack should remain responding to $ID_CONTROLLER_BTN_PLAY_PAUSE clicks " +
+                                "after canceling adding a playlist",
+                        R.drawable.ic_play
+                    )
 
                     songItemImgBtnPlayPause.clickAndRun()
                     songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
                     songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                        "After clicking on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE " +
-                                "the image displayed should change to R.drawable.ic_pause",
+                        "The currentTrack should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks " +
+                                "after canceling adding a playlist",
                         R.drawable.ic_pause
                     )
+
+                    controllerBtnStop.clickAndRun()
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The currentTrack should remain responding to $ID_CONTROLLER_BTN_STOP clicks " +
+                                "after canceling adding a playlist",
+                        R.drawable.ic_play
+                    )
+
+                    songItemImgBtnPlayPause.clickAndRun()
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "The currentTrack should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks " +
+                                "after canceling adding a playlist",
+                        R.drawable.ic_pause
+                    )
+
+                } else {
+                    songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
+                        "A track that is not the currentTrack should remain not being " +
+                                "the currentTrack after canceling adding a playlist",
+                        R.drawable.ic_play
+                    )
                 }
-
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
             }
-            AddPlaylistScreen(this).apply {
-                mainFragmentContainer.findViewByString<Button>("addPlaylistBtnCancel").clickAndRun()
-            }
-            PlayMusicScreen(this).apply {
-                // check item keeps selected state after cancel add list
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, item ->
-                    var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-
-                    if (item.id == selectedSongZeroIndex + 1) {
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The currentTrack should remain being the currentTrack " +
-                                    "after canceling adding a playlist",
-                            R.drawable.ic_pause
-                        )
-
-                        val controllerUi = mainFragmentContainer.getControllerViews()
-
-                        controllerUi.btnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The currentTrack should remain responding to $ID_CONTROLLER_BTN_PLAY_PAUSE clicks " +
-                                    "after canceling adding a playlist",
-                            R.drawable.ic_play
-                        )
-
-                        songItemImgBtnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The currentTrack should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks " +
-                                    "after canceling adding a playlist",
-                            R.drawable.ic_pause
-                        )
-
-                        controllerUi.btnStop.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The currentTrack should remain responding to $ID_CONTROLLER_BTN_STOP clicks " +
-                                    "after canceling adding a playlist",
-                            R.drawable.ic_play
-                        )
-
-                        songItemImgBtnPlayPause.clickAndRun()
-                        songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "The currentTrack should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks " +
-                                    "after canceling adding a playlist",
-                            R.drawable.ic_pause
-                        )
-
-                    } else {
-                        songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
-                            "A track that is not the currentTrack should remain not being " +
-                                    "the currentTrack after canceling adding a playlist",
-                            R.drawable.ic_play
-                        )
-                    }
-                }
-                //
-            }
+            //
         }
+        Unit
     }
 
     @Test
-    fun checkDeletePlaylistOnPlayMusicStateDeletingPlaylistThatIsNotCurrentPlaylist() {
+    fun checkDeletePlaylistOnPlayMusicStateDeletingPlaylistThatIsNotCurrentPlaylist() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
 
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = "My Playlist",
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer
+            )
+        }
+        PlayMusicScreen(this).apply {
+            // delete playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
 
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+            ).also { (_, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                    listOf("My Playlist"),
+                    dialogItems
+                )
+                shadowDialog.clickAndRunOnItem(0)
             }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = "My Playlist",
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer
+            //
+
+            // check delete dialog don't display deleted playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+            ).also { (dialog, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                    listOf<String>(),
+                    dialogItems
+                )
+
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+            }
+            //
+
+            // check load dialog don't display deleted playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
+            ).also { (dialog, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
+                    listOf("All Songs"),
+                    dialogItems
+                )
+
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+            }
+            //
+
+            //check currentPlaylist remains
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+                assertSongItem(
+                    "Deleting a playlist that is not the currentPlaylist " +
+                            "should not change the currentPlaylist",
+                    itemViewSupplier(), song
                 )
             }
-            PlayMusicScreen(this).apply {
-                // delete playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                        listOf("My Playlist"),
-                        dialogItems
-                    )
-                    shadowDialog.clickAndRunOnItem(0)
-                }
-                //
-
-                // check delete dialog don't display deleted playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                        listOf<String>(),
-                        dialogItems
-                    )
-
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
-                }
-                //
-
-                // check load dialog don't display deleted playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
-                        listOf("All Songs"),
-                        dialogItems
-                    )
-
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
-                }
-                //
-
-                //check currentPlaylist remains
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
-                    assertSongItem(
-                        "Deleting a playlist that is not the currentPlaylist " +
-                                "should not change the currentPlaylist",
-                        itemViewSupplier(), song
-                    )
-                }
-            }
         }
+        Unit
     }
 
     @Test
-    fun checkDeletePlaylistOnPlayMusicStateWithCurrentPlaylistBeingDeleted() {
+    fun checkDeletePlaylistOnPlayMusicStateWithCurrentPlaylistBeingDeleted() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val testedItemsOneBasedIndexes = testedItemsZeroBasedIndexes.map { it + 1 }
+        val playlistName = "My Playlist"
 
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val testedItemsOneBasedIndexes = testedItemsZeroBasedIndexes.map { it + 1 }
-            val playlistName = "My Playlist"
-
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer
-                )
-            }
-            PlayMusicScreen(this).apply {
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes.first()])
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
-                )
-
-                // check loaded items
-                val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
-
-                mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, position, item ->
-                    val messageWrongListItemAfterPlaylistLoaded =
-                        "Wrong list item after playlist loaded"
-                    assertSongItem(
-                        messageWrongListItemAfterPlaylistLoaded,
-                        itemViewSupplier(),
-                        item
-                    )
-                }
-                //
-
-                // delete playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                        listOf(playlistName),
-                        dialogItems
-                    )
-                    shadowDialog.clickAndRunOnItem(0)
-                }
-                //
-
-                //check items
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, item ->
-                    val messageWrongItem =
-                        "Wrong list item found after deleting current playlist, " +
-                                "expected \"All songs\" playlist to be loaded"
-                    assertSongItem(messageWrongItem, itemViewSupplier(), item)
-                }
-
-                // check delete dialog don't display deleted playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                        listOf<String>(),
-                        dialogItems
-                    )
-
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
-                }
-                //
-
-                // check load dialog don't display deleted playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
-                        listOf("All Songs"),
-                        dialogItems
-                    )
-
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
-                }
-                //
-            }
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
         }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer
+            )
+        }
+        PlayMusicScreen(this).apply {
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes.first()])
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
+
+            // check loaded items
+            val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
+
+            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, item ->
+                val messageWrongListItemAfterPlaylistLoaded =
+                    "Wrong list item after playlist loaded"
+                assertSongItem(
+                    messageWrongListItemAfterPlaylistLoaded,
+                    itemViewSupplier(),
+                    item
+                )
+            }
+            //
+
+            // delete playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+            ).also { (_, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                    listOf(playlistName),
+                    dialogItems
+                )
+                shadowDialog.clickAndRunOnItem(0)
+            }
+            //
+
+            //check items
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+                val messageWrongItem =
+                    "Wrong list item found after deleting current playlist, " +
+                            "expected \"All songs\" playlist to be loaded"
+                assertSongItem(messageWrongItem, itemViewSupplier(), item)
+            }
+
+            // check delete dialog don't display deleted playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+            ).also { (dialog, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                    listOf<String>(),
+                    dialogItems
+                )
+
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+            }
+            //
+
+            // check load dialog don't display deleted playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
+            ).also { (dialog, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
+                    listOf("All Songs"),
+                    dialogItems
+                )
+
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+            }
+            //
+        }
+        Unit
     }
 
     @Test
-    fun checkDeletePlaylistOnAddPlaylistStateDeletingPlaylistThatIsNotDisplayingAndNotCurrentPlaylist() {
+    fun checkDeletePlaylistOnAddPlaylistStateDeletingPlaylistThatIsNotDisplayingAndNotCurrentPlaylist() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = "My Playlist",
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer
+            )
+        }
+        PlayMusicScreen(this).apply {
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            // delete playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
 
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = "My Playlist",
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+            ).also { (_, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                    listOf("My Playlist"),
+                    dialogItems
                 )
+                shadowDialog.clickAndRunOnItem(0)
             }
-            PlayMusicScreen(this).apply {
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+            //
+
+            // check delete dialog don't display deleted playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+            ).also { (dialog, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                    listOf<String>(),
+                    dialogItems
+                )
+
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
             }
-            AddPlaylistScreen(this).apply {
-                // delete playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+            //
 
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
+            // check load dialog don't display deleted playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
 
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                        listOf("My Playlist"),
-                        dialogItems
-                    )
-                    shadowDialog.clickAndRunOnItem(0)
-                }
-                //
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
+            ).also { (dialog, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
 
-                // check delete dialog don't display deleted playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
+                    listOf("All Songs"),
+                    dialogItems
+                )
 
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+            }
+            //
 
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                        listOf<String>(),
-                        dialogItems
-                    )
-
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
-                }
-                //
-
-                // check load dialog don't display deleted playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
-                        listOf("All Songs"),
-                        dialogItems
-                    )
-
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
-                }
-                //
-
-                // check SongSelector items remains
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
-                    val itemView = itemViewSupplier()
-                    val actualArtist = itemView
-                        .findViewByString<TextView>("songSelectorItemTvArtist")
-                        .text.toString().lowercase()
-                    val actualTitle = itemView
-                        .findViewByString<TextView>("songSelectorItemTvTitle")
-                        .text.toString().lowercase()
-                    val actualDuration = itemView
-                        .findViewByString<TextView>("songSelectorItemTvDuration")
-                        .text.toString().lowercase()
+            // check SongSelector items remains
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+                SongSelectorItemBindings(itemViewSupplier).apply {
                     val errorMessage =
                         "After deleting in ADD_PLAYLIST state a playlist that is not displaying " +
                                 "the playlist that is displaying should remain"
-
-                    assertEquals(errorMessage, song.artist, actualArtist)
-                    assertEquals(errorMessage, song.title, actualTitle)
-                    assertEquals(errorMessage, song.duration.timeString(), actualDuration)
+                    assertSongSelectorInfo(errorMessage, song)
                 }
-
-                mainFragmentContainer
-                    .findViewByString<Button>("addPlaylistBtnCancel")
-                    .clickAndRun()
             }
-            PlayMusicScreen(this).apply {
-                //check currentPlaylist remains
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
-                    val errorMessage =
-                        "After deleting in ADD_PLAYLIST state a playlist that is not the currentPlaylist" +
-                                "the currentPlaylist should remain"
+            addPlaylistBtnCancel.clickAndRun()
+        }
+        PlayMusicScreen(this).apply {
+            //check currentPlaylist remains
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+                val errorMessage =
+                    "After deleting in ADD_PLAYLIST state a playlist that is not the currentPlaylist" +
+                            "the currentPlaylist should remain"
 
-                    assertSongItem(errorMessage, itemViewSupplier(), song)
-                }
+                assertSongItem(errorMessage, itemViewSupplier(), song)
             }
         }
+        Unit
     }
 
     @Test
-    fun checkDeletePlaylistOnAddPlaylistStateWithCurrentDisplayingAndCurrentPlaylistBeingDeleted() {
+    fun checkDeletePlaylistOnAddPlaylistStateWithCurrentDisplayingAndCurrentPlaylistBeingDeleted()  = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val playlistName = "My Playlist"
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer
+            )
+        }
+        PlayMusicScreen(this).apply {
+            // load list in PLAY_MUSIC state
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes.first()])
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
 
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val playlistName = "My Playlist"
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            // load list in ADD_PLAYLIST state
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
+
+            CustomMediaPlayerShadow.setFakeSong(songFakeList.first())
+            // delete playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+            ).also { (_, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                    listOf(playlistName),
+                    dialogItems
                 )
+                shadowDialog.clickAndRunOnItem(0)
             }
-            PlayMusicScreen(this).apply {
-                // load list in PLAY_MUSIC state
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes.first()])
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
+            //
+
+            // check delete dialog don't display deleted playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+            ).also { (dialog, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                    listOf<String>(),
+                    dialogItems
                 )
 
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
             }
-            AddPlaylistScreen(this).apply {
-                // load list in ADD_PLAYLIST state
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
+            //
+
+            // check load dialog don't display deleted playlist
+            activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
+
+            getLastAlertDialogWithShadow(
+                "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
+            ).also { (dialog, shadowDialog) ->
+                val dialogItems = shadowDialog.items.map { it.toString() }
+
+                assertEquals(
+                    "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
+                    listOf("All Songs"),
+                    dialogItems
                 )
 
-                CustomMediaPlayerShadow.setFakeSong(songFakeList.first())
-                // delete playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+            }
+            //
 
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                        listOf(playlistName),
-                        dialogItems
-                    )
-                    shadowDialog.clickAndRunOnItem(0)
-                }
-                //
-
-                // check delete dialog don't display deleted playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                        listOf<String>(),
-                        dialogItems
-                    )
-
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
-                }
-                //
-
-                // check load dialog don't display deleted playlist
-                activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
-
-                getLastAlertDialogWithShadow(
-                    "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
-                ).also { (dialog, shadowDialog) ->
-                    val dialogItems = shadowDialog.items.map { it.toString() }
-
-                    assertEquals(
-                        "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
-                        listOf("All Songs"),
-                        dialogItems
-                    )
-
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
-                }
-                //
-
-                // check SongSelector changes to "All Songs"
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
-                    val itemView = itemViewSupplier()
-                    val actualArtist = itemView
-                        .findViewByString<TextView>("songSelectorItemTvArtist")
-                        .text.toString().lowercase()
-                    val actualTitle = itemView
-                        .findViewByString<TextView>("songSelectorItemTvTitle")
-                        .text.toString().lowercase()
-                    val actualDuration = itemView
-                        .findViewByString<TextView>("songSelectorItemTvDuration")
-                        .text.toString().lowercase()
+            // check SongSelector changes to "All Songs"
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+                SongSelectorItemBindings(itemViewSupplier).apply {
                     val errorMessage =
                         "After deleting in ADD_PLAYLIST state a playlist that is displaying " +
                                 "the playlist that is displaying should change to \"All Songs\""
-
-                    assertEquals(errorMessage, song.artist, actualArtist)
-                    assertEquals(errorMessage, song.title, actualTitle)
-                    assertEquals(errorMessage, song.duration.timeString(), actualDuration)
+                    assertSongSelectorInfo(errorMessage, song)
                 }
-
-                mainFragmentContainer
-                    .findViewByString<Button>("addPlaylistBtnCancel")
-                    .clickAndRun()
             }
-            PlayMusicScreen(this).apply {
-                //check currentPlaylist changes to "All Songs"
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
-                    val errorMessage =
-                        "After deleting in ADD_PLAYLIST state a playlist that is the currentPlaylist" +
-                                "the currentPlaylist should change to \"All Songs\""
 
-                    assertSongItem(errorMessage, itemViewSupplier(), song)
-                }
+            addPlaylistBtnCancel.clickAndRun()
+        }
+        PlayMusicScreen(this).apply {
+            //check currentPlaylist changes to "All Songs"
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+                val errorMessage =
+                    "After deleting in ADD_PLAYLIST state a playlist that is the currentPlaylist" +
+                            "the currentPlaylist should change to \"All Songs\""
+                assertSongItem(errorMessage, itemViewSupplier(), song)
             }
         }
+        Unit
     }
 
     @Test
-    fun checkSearchInPlayMusicStateChangeCurrentPlaylistToAllSongs() {
+    fun checkSearchInPlayMusicStateChangeCurrentPlaylistToAllSongs()  = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val playlistName = "My Playlist"
 
-        testActivity {
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer,
-                    testEmptyName = true
-                )
-            }
-            PlayMusicScreen(this).apply {
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes[0]])
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
-                )
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer,
+                testEmptyName = true
+            )
+        }
+        PlayMusicScreen(this).apply {
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes[0]])
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
 
-                mainButtonSearch.clickAndRun()
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
-                    assertSongItem(
-                        "Wrong list item after search button clicked",
-                        itemViewSupplier(),
-                        song
-                    )
-                }
+            mainButtonSearch.clickAndRun()
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+                assertSongItem(
+                    "Wrong list item after search button clicked",
+                    itemViewSupplier(),
+                    song
+                )
             }
         }
+        Unit
     }
 
     @Test
-    fun checkSearchInAddPlaylistStateDisplaysAllSongsOnAddPlaylistStateAndKeepsCurrentPlaylistInPlayMusicState() {
+    fun checkSearchInAddPlaylistStateDisplaysAllSongsOnAddPlaylistStateAndKeepsCurrentPlaylistInPlayMusicState()  = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val playlistName = "My Playlist"
+        val playlist = testedItemsZeroBasedIndexes.map { songFakeList[it] }
 
-        testActivity {
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val playlistName = "My Playlist"
-            val playlist = testedItemsZeroBasedIndexes.map { songFakeList[it] }
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
 
-            PlayMusicScreen(this).apply {
-                mainButtonSearch.clickAndRun()
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = testedItemsZeroBasedIndexes,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer,
+                testEmptyName = true
+            )
+        }
+        PlayMusicScreen(this).apply {
+            CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes[0]])
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            loadPlaylist(
+                menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
+                expectedPlaylistNameList = listOf("All Songs", playlistName),
+                playlistToLoadIndex = 1
+            )
 
-            }
-            AddPlaylistScreen(this).apply {
-                addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = testedItemsZeroBasedIndexes,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer,
-                    testEmptyName = true
-                )
-            }
-            PlayMusicScreen(this).apply {
-                CustomMediaPlayerShadow.setFakeSong(songFakeList[testedItemsZeroBasedIndexes[0]])
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
-                )
-                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            }
-            AddPlaylistScreen(this).apply {
-                loadPlaylist(
-                    menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
-                    expectedPlaylistNameList = listOf("All Songs", playlistName),
-                    playlistToLoadIndex = 1
-                )
+            mainButtonSearch.clickAndRun()
 
-                mainButtonSearch.clickAndRun()
-
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
-                    val itemView = itemViewSupplier()
-                    val actualArtist = itemView
-                        .findViewByString<TextView>("songSelectorItemTvArtist")
-                        .text.toString().lowercase()
-                    val actualTitle = itemView
-                        .findViewByString<TextView>("songSelectorItemTvTitle")
-                        .text.toString().lowercase()
-                    val actualDuration = itemView
-                        .findViewByString<TextView>("songSelectorItemTvDuration")
-                        .text.toString().lowercase()
+            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+                SongSelectorItemBindings(itemViewSupplier).apply {
                     val errorMessage =
                         "After mainButtonSearch is clicked on ADD_PLAYLIST state " +
                                 "the \"All Songs\" playlist should be displaying"
-
-                    assertEquals(errorMessage, song.artist, actualArtist)
-                    assertEquals(errorMessage, song.title, actualTitle)
-                    assertEquals(errorMessage, song.duration.timeString(), actualDuration)
+                    assertSongSelectorInfo(errorMessage, song)
                 }
-
-                mainFragmentContainer
-                    .findViewByString<Button>("addPlaylistBtnCancel")
-                    .clickAndRun()
             }
-            PlayMusicScreen(this).apply {
-                mainSongList.assertListItems(playlist) { itemViewSupplier, position, song ->
-                    assertSongItem(
-                        "After mainButtonSearch is clicked on ADD_PLAYLIST state " +
-                                "the currentPlaylist in PLAY_MUSIC state should not change",
-                        itemViewSupplier(), song
-                    )
-                }
+            addPlaylistBtnCancel.clickAndRun()
+        }
+        PlayMusicScreen(this).apply {
+            mainSongList.assertListItems(playlist) { itemViewSupplier, _, song ->
+                assertSongItem(
+                    "After mainButtonSearch is clicked on ADD_PLAYLIST state " +
+                            "the currentPlaylist in PLAY_MUSIC state should not change",
+                    itemViewSupplier(), song
+                )
             }
         }
+        Unit
     }
 }

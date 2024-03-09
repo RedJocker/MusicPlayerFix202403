@@ -473,33 +473,33 @@ open class MusicPlayerUnitTests<T : Activity>(clazz: Class<T>): AbstractUnitTest
     }
 
     inner class ControllerViews(
-        val currentTv: TextView,
-        val totalTv: TextView,
-        val seekBar: SeekBar,
-        val btnPlayPause: Button,
-        val btnStop: Button
+        val controllerTvCurrentTime: TextView,
+        val controllerTvTotalTime: TextView,
+        val controllerSeekBar: SeekBar,
+        val controllerBtnPlayPause: Button,
+        val controllerBtnStop: Button
     ) {
         fun assertControllerState(errorMessage: String, songFake: SongFake, expectedPosition: Int) {
 
             val messageTotalTimeTv = "$errorMessage On controllerTvTotalTime text"
-            assertEquals(messageTotalTimeTv, songFake.duration.timeString(), this.totalTv.text.toString())
+            assertEquals(messageTotalTimeTv, songFake.duration.timeString(), this.controllerTvTotalTime.text.toString())
 
             val messageSeekBar = "$errorMessage On controllerSeekBar progress"
-            assertEquals(messageSeekBar, expectedPosition / 1000, this.seekBar.progress)
+            assertEquals(messageSeekBar, expectedPosition / 1000, this.controllerSeekBar.progress)
 
             val messageCurrentTimeTv = "$errorMessage On controllerTvCurrentTime text"
-            assertEquals(messageCurrentTimeTv, expectedPosition.timeString(), this.currentTv.text.toString())
+            assertEquals(messageCurrentTimeTv, expectedPosition.timeString(), this.controllerTvCurrentTime.text.toString())
         }
     }
 
     fun FragmentContainerView.getControllerViews(): ControllerViews {
 
         return ControllerViews(
-            currentTv = findViewByString("controllerTvCurrentTime"),
-            totalTv=  findViewByString("controllerTvTotalTime"),
-            seekBar = findViewByString("controllerSeekBar"),
-            btnPlayPause = findViewByString("controllerBtnPlayPause"),
-            btnStop = findViewByString("controllerBtnStop")
+            controllerTvCurrentTime = findViewByString("controllerTvCurrentTime"),
+            controllerTvTotalTime=  findViewByString("controllerTvTotalTime"),
+            controllerSeekBar = findViewByString("controllerSeekBar"),
+            controllerBtnPlayPause = findViewByString("controllerBtnPlayPause"),
+            controllerBtnStop = findViewByString("controllerBtnStop")
         )
     }
 
@@ -524,10 +524,10 @@ open class MusicPlayerUnitTests<T : Activity>(clazz: Class<T>): AbstractUnitTest
         assertTrue(messageCurrentPosition, abs(expectedPosition - currentPosition) < 100)
 
         val messageSeekBar = "$errorMessage On controllerSeekBar progress"
-        assertEquals(messageSeekBar, expectedPosition / 1000, controllerViews.seekBar.progress)
+        assertEquals(messageSeekBar, expectedPosition / 1000, controllerViews.controllerSeekBar.progress)
 
         val messageCurrentTimeTv = "$errorMessage On controllerTvCurrentTime text"
-        assertEquals(messageCurrentTimeTv, expectedPosition.timeString(), controllerViews.currentTv.text.toString())
+        assertEquals(messageCurrentTimeTv, expectedPosition.timeString(), controllerViews.controllerTvCurrentTime.text.toString())
     }
 
     fun adjustPlayerPositionToAvoidSyncIssues(): Int {
