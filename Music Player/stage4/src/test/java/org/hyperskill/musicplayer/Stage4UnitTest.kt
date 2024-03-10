@@ -13,13 +13,16 @@ import org.hyperskill.musicplayer.internals.MusicPlayerUnitTests
 import org.hyperskill.musicplayer.internals.SongFake
 import org.junit.After
 import org.junit.Assert
+import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Duration
 
 // version 1.4
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowCountDownTimer::class, CustomShadowAsyncDifferConfig::class])
 @RunWith(RobolectricTestRunner::class)
 class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java) {
@@ -48,7 +51,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun testPermissionRequestGranted() {
+    fun test00_testPermissionRequestGranted() {
         val fakeSongResult = SongFakeRepository.fakeSongData.dropLast(3)
 
         setupContentProvider(fakeSongResult)
@@ -64,9 +67,9 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             // grant permissions and invoke listener
             shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
             activity.onRequestPermissionsResult(
-                    expectedRequestCode,
-                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    intArrayOf(PackageManager.PERMISSION_GRANTED)
+                expectedRequestCode,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                intArrayOf(PackageManager.PERMISSION_GRANTED)
             )
             shadowLooper.idleFor(Duration.ofSeconds(3))
             //
@@ -74,15 +77,15 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
                 assertSongItem(
-                        "After permission granted the list should load with song files data.",
-                        itemViewSupplier(), song
+                    "After permission granted the list should load with song files data.",
+                    itemViewSupplier(), song
                 )
             }
         }
     }
 
     @Test
-    fun testListStateOnPermissionRequestDenied() {
+    fun test01_testListStateOnPermissionRequestDenied() {
         val fakeSongResult = SongFakeRepository.fakeSongData
         setupContentProvider(fakeSongResult)
 
@@ -99,9 +102,9 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
             activity.onRequestPermissionsResult(
-                    expectedRequestCode,
-                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    intArrayOf(PackageManager.PERMISSION_DENIED)
+                expectedRequestCode,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                intArrayOf(PackageManager.PERMISSION_DENIED)
             )
             shadowLooper.idleFor(Duration.ofSeconds(3))
 
@@ -111,7 +114,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
 
     @Test
-    fun testToastShowsOnPermissionRequestDenied() {
+    fun test02_testToastShowsOnPermissionRequestDenied() {
         val fakeSongResult = SongFakeRepository.fakeSongData
         setupContentProvider(fakeSongResult)
 
@@ -127,21 +130,21 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
             activity.onRequestPermissionsResult(
-                    expectedRequestCode,
-                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    intArrayOf(PackageManager.PERMISSION_DENIED)
+                expectedRequestCode,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                intArrayOf(PackageManager.PERMISSION_DENIED)
             )
             shadowLooper.idleFor(Duration.ofSeconds(3))
 
             assertLastToastMessageEquals(
-                    errorMessage = "On permission denial a Toast with warning message",
-                    expectedMessage = "Songs cannot be loaded without permission"
+                errorMessage = "On permission denial a Toast with warning message",
+                expectedMessage = "Songs cannot be loaded without permission"
             )
         }
     }
 
     @Test
-    fun testPermissionRequestAgainGranted() {
+    fun test03_testPermissionRequestAgainGranted() {
         val fakeSongResult = SongFakeRepository.fakeSongData
 
         setupContentProvider(fakeSongResult)
@@ -158,9 +161,9 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
             activity.onRequestPermissionsResult(
-                    expectedRequestCode,
-                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    intArrayOf(PackageManager.PERMISSION_DENIED)
+                expectedRequestCode,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                intArrayOf(PackageManager.PERMISSION_DENIED)
             )
             shadowLooper.runToEndOfTasks()
 
@@ -171,16 +174,16 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
             shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
             activity.onRequestPermissionsResult(
-                    expectedRequestCode,
-                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                    intArrayOf(PackageManager.PERMISSION_GRANTED)
+                expectedRequestCode,
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
+                intArrayOf(PackageManager.PERMISSION_GRANTED)
             )
             shadowLooper.runToEndOfTasks()
 
             mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
                 assertSongItem(
-                        "After permission is granted songs should be loaded into mainSongList. Song",
-                        itemViewSupplier(), song
+                    "After permission is granted songs should be loaded into mainSongList. Song",
+                    itemViewSupplier(), song
                 )
 
             }
@@ -188,7 +191,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun testMusicFilesRetrievalAllFiles() {
+    fun test04_testMusicFilesRetrievalAllFiles() {
         shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
         val fakeSongResult = SongFakeRepository.fakeSongData
         setupContentProvider(fakeSongResult)
@@ -201,15 +204,15 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             mainButtonSearch.clickAndRun()
             mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
                 assertSongItem(
-                        "mainSongList content should be songs found on external storage. Song",
-                        itemViewSupplier(), song
+                    "mainSongList content should be songs found on external storage. Song",
+                    itemViewSupplier(), song
                 )
             }
         }
     }
 
     @Test
-    fun testMusicFilesRetrievalNoFiles() {
+    fun test05_testMusicFilesRetrievalNoFiles() {
         shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
         val fakeSongResult = listOf<SongFake>()
         setupContentProvider(fakeSongResult)

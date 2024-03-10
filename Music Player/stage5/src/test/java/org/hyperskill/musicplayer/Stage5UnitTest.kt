@@ -13,13 +13,16 @@ import org.hyperskill.musicplayer.internals.MusicPlayerUnitTests
 import org.hyperskill.musicplayer.internals.TestDatabaseFactory
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Duration
 
 // version 1.4
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowCountDownTimer::class, CustomShadowAsyncDifferConfig::class])
 @RunWith(RobolectricTestRunner::class)
 class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java) {
@@ -68,7 +71,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkDatabaseDataAfterPlaylistSave() {
+    fun test00_checkDatabaseDataAfterPlaylistSave() {
 
         testActivity {
             mainButtonSearch
@@ -133,7 +136,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkSamePlaylistSaveTwiceNoDuplicatesOnDatabase() {
+    fun test01_checkSamePlaylistSaveTwiceNoDuplicatesOnDatabase() {
         testActivity {
             mainButtonSearch
 
@@ -207,7 +210,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkDatabaseDataAfterPlaylistSaveWithExistingPlaylistNameAndDifferentSongs() {
+    fun test02_checkDatabaseDataAfterPlaylistSaveWithExistingPlaylistNameAndDifferentSongs() {
         testActivity {
             mainButtonSearch
 
@@ -282,7 +285,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkDatabaseDifferentPlaylistSaves() {
+    fun test03_checkDatabaseDifferentPlaylistSaves() {
         testActivity {
             mainButtonSearch
 
@@ -360,7 +363,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistFromDatabase() {
+    fun test04_checkLoadPlaylistFromDatabase() {
         val playlistName = "fake songs"
         val fakeData = listOf(9, 10, 11).map { index ->
             playlistName to index
@@ -401,7 +404,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkAutomaticSearchOnPlaylistLoad() {
+    fun test05_checkAutomaticSearchOnPlaylistLoad() {
         val playlistName = "Party Songs"
         val fakeData = listOf(3, 12, 13).map { index ->
             playlistName to index

@@ -13,13 +13,16 @@ import org.hyperskill.musicplayer.internals.MusicPlayerUnitTests
 import org.hyperskill.musicplayer.internals.SongFake
 import org.junit.After
 import org.junit.Assert
+import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Duration
 
 // version 1.4
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowCountDownTimer::class, CustomShadowAsyncDifferConfig::class])
 @RunWith(RobolectricTestRunner::class)
 class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java) {
@@ -48,7 +51,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun testPermissionRequestGranted() {
+    fun test00_testPermissionRequestGranted() {
         val fakeSongResult = SongFakeRepository.fakeSongData.dropLast(3)
 
         setupContentProvider(fakeSongResult)
@@ -82,7 +85,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun testListStateOnPermissionRequestDenied() {
+    fun test01_testListStateOnPermissionRequestDenied() {
         val fakeSongResult = SongFakeRepository.fakeSongData
         setupContentProvider(fakeSongResult)
 
@@ -111,7 +114,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
 
     @Test
-    fun testToastShowsOnPermissionRequestDenied() {
+    fun test02_testToastShowsOnPermissionRequestDenied() {
         val fakeSongResult = SongFakeRepository.fakeSongData
         setupContentProvider(fakeSongResult)
 
@@ -141,7 +144,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun testPermissionRequestAgainGranted() {
+    fun test03_testPermissionRequestAgainGranted() {
         val fakeSongResult = SongFakeRepository.fakeSongData
 
         setupContentProvider(fakeSongResult)
@@ -188,7 +191,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun testMusicFilesRetrievalAllFiles() {
+    fun test04_testMusicFilesRetrievalAllFiles() {
         shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
         val fakeSongResult = SongFakeRepository.fakeSongData
         setupContentProvider(fakeSongResult)
@@ -209,7 +212,7 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun testMusicFilesRetrievalNoFiles() {
+    fun test05_testMusicFilesRetrievalNoFiles() {
         shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
         val fakeSongResult = listOf<SongFake>()
         setupContentProvider(fakeSongResult)

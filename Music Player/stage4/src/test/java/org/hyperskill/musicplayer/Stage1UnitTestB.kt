@@ -13,20 +13,23 @@ import org.hyperskill.musicplayer.internals.PlayMusicScreen.Companion.ID_CONTROL
 import org.hyperskill.musicplayer.internals.PlayMusicScreen.Companion.ID_CONTROLLER_BTN_STOP
 import org.hyperskill.musicplayer.internals.PlayMusicScreen.Companion.ID_CONTROLLER_SEEKBAR
 import org.junit.Assert.assertEquals
+import org.junit.FixMethodOrder
 import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 // version 2.0
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(RobolectricTestRunner::class)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowAsyncDifferConfig::class])
 class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java){
 
     @Test
-    fun checkMainActivityComponentsExist() = testActivity {
+    fun test00_checkMainActivityComponentsExist() = testActivity {
         MusicPlayerBaseScreen(this).apply {
             mainButtonSearch
             mainSongList
@@ -36,7 +39,7 @@ class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.j
     }
 
     @Test
-    fun checkPlayerControllerFragmentComponentsExist() = testActivity {
+    fun test01_checkPlayerControllerFragmentComponentsExist() = testActivity {
         PlayMusicScreen(this, initAssertions = true).apply {
             controllerTvCurrentTime // assert exists
             controllerTvTotalTime
@@ -49,7 +52,7 @@ class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.j
 
     @Ignore
     @Test
-    fun checkSearchButtonNoSongsFound() = testActivity {
+    fun test02_checkSearchButtonNoSongsFound() = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
             assertLastToastMessageEquals(
@@ -61,7 +64,7 @@ class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.j
     }
 
     @Test
-    fun checkMenuItemAddPlaylist() = testActivity {
+    fun test03_checkMenuItemAddPlaylist() = testActivity {
         PlayMusicScreen(this).apply {
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
             assertLastToastMessageEquals(
@@ -73,7 +76,7 @@ class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.j
     }
 
     @Test
-    fun checkMenuItemLoadPlaylist() = testActivity {
+    fun test04_checkMenuItemLoadPlaylist() = testActivity {
         PlayMusicScreen(this).apply {
             activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
 
@@ -94,7 +97,7 @@ class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.j
     }
 
     @Test
-    fun checkMenuItemDeletePlaylist() = testActivity {
+    fun test05_checkMenuItemDeletePlaylist() = testActivity {
         PlayMusicScreen(this).apply {
             activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
 
@@ -115,7 +118,7 @@ class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.j
     }
 
     @Test
-    fun checkControllerStopButtonBeforeSearch() = testActivity {
+    fun test06_checkControllerStopButtonBeforeSearch() = testActivity {
         PlayMusicScreen(this).apply {
             try { controllerBtnStop.clickAndRun() }
             catch (t: Throwable) {
@@ -129,7 +132,7 @@ class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.j
     }
 
     @Test
-    fun checkControllerSeekBarBeforeSearch() = testActivity {
+    fun test07_checkControllerSeekBarBeforeSearch() = testActivity {
         PlayMusicScreen(this).apply {
             if (Shadows.shadowOf(controllerSeekBar).onSeekBarChangeListener != null) {
                 try { controllerSeekBar.setProgressAsUser(1) }
@@ -147,7 +150,7 @@ class Stage1UnitTestB : MusicPlayerUnitTests<MainActivity>(MainActivity::class.j
     }
 
     @Test
-    fun checkControllerPlayPauseButtonBeforeSearch() = testActivity {
+    fun test08_checkControllerPlayPauseButtonBeforeSearch() = testActivity {
         PlayMusicScreen(this).apply {
             try { controllerBtnPlayPause.clickAndRun() }
             catch (t: Throwable) {

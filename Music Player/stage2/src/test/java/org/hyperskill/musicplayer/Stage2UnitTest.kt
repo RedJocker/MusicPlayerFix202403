@@ -21,13 +21,16 @@ import org.hyperskill.musicplayer.internals.PlayMusicScreen.Companion.ID_SONG_IT
 import org.hyperskill.musicplayer.internals.SongFake
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.util.concurrent.TimeUnit
 
 // version 2.0
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowAsyncDifferConfig::class])
 @RunWith(RobolectricTestRunner::class)
 class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java){
@@ -35,10 +38,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     companion object {
         val songFakeList = (1..10).map { idNum ->
             SongFake(
-                    id = idNum,
-                    artist = "artist$idNum",
-                    title = "title$idNum",
-                    duration = 215_000
+                id = idNum,
+                artist = "artist$idNum",
+                title = "title$idNum",
+                duration = 215_000
             )
         }
     }
@@ -52,7 +55,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
 
     @Test
-    fun checkSongListAfterInitialClickOnSearch() = testActivity {
+    fun test00_checkSongListAfterInitialClickOnSearch() = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
 
@@ -76,7 +79,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkSongListItemChangesImageOnImageButtonClick() = testActivity {
+    fun test01_checkSongListItemChangesImageOnImageButtonClick() = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
             val songFakeIndex = 3
@@ -117,7 +120,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkWhenCurrentTrackChangesAndOldCurrentTrackIsPlayingImageChangesToPaused()  = testActivity {
+    fun test02_checkWhenCurrentTrackChangesAndOldCurrentTrackIsPlayingImageChangesToPaused()  = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
             val songFakeIndexBefore = 5
@@ -180,7 +183,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
 
     @Test
-    fun checkWhenCurrentTrackChangesAndOldCurrentTrackIsNotPlayingImageRemains() = testActivity {
+    fun test03_checkWhenCurrentTrackChangesAndOldCurrentTrackIsNotPlayingImageRemains() = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
             val songFakeIndexBefore = 5
@@ -252,7 +255,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkAfterInitialSearchFirstListItemIsCurrentTrackAndRespondToControllerPlayPauseButton() = testActivity {
+    fun test04_checkAfterInitialSearchFirstListItemIsCurrentTrackAndRespondToControllerPlayPauseButton() = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
 
@@ -289,7 +292,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkCurrentTrackImgChangeAfterControllerStopButtonClickWithCurrentTrackPlaying() = testActivity {
+    fun test05_checkCurrentTrackImgChangeAfterControllerStopButtonClickWithCurrentTrackPlaying() = testActivity {
         PlayMusicScreen(this).apply {
             val songFakeIndex = 4
             mainButtonSearch.clickAndRun()
@@ -359,7 +362,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkListItemImgChangeMixedClicks() = testActivity {
+    fun test06_checkListItemImgChangeMixedClicks() = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch
             mainFragmentContainer
@@ -423,7 +426,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkAddPlaylistStateTriggeredByMenuItem() = testActivity {
+    fun test07_checkAddPlaylistStateTriggeredByMenuItem() = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
@@ -454,7 +457,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkAddingPlaylistWithEmptyListAddedToastErrorEmptyListMessage() = testActivity {
+    fun test08_checkAddingPlaylistWithEmptyListAddedToastErrorEmptyListMessage() = testActivity {
         val playlistName = "My Playlist"
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
@@ -472,7 +475,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkAddingPlaylistWithBothEmptyListAndEmptyPlaylistNameToastErrorEmptyListMessage() = testActivity {
+    fun test09_checkAddingPlaylistWithBothEmptyListAndEmptyPlaylistNameToastErrorEmptyListMessage() = testActivity {
         PlayMusicScreen(this).apply {
             mainButtonSearch
             mainSongList
@@ -491,7 +494,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkAddingPlaylistWithReservedPlaylistNameAllSongsToastErrorReservedNameMessage() = testActivity {
+    fun test10_checkAddingPlaylistWithReservedPlaylistNameAllSongsToastErrorReservedNameMessage() = testActivity {
         val playlistName = "All Songs"
 
         PlayMusicScreen(this).apply {
@@ -516,7 +519,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistInPlayMusicStateAfterAddingPlaylistWithMainMenuItem() = testActivity {
+    fun test11_checkLoadPlaylistInPlayMusicStateAfterAddingPlaylistWithMainMenuItem() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val testedItemsOneBasedIndexes = listOf(2, 4, 7)
         val playlistName = "My Playlist"
@@ -599,7 +602,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistInPlayMusicStateAfterAddingPlaylistWithLongClick() = testActivity {
+    fun test12_checkLoadPlaylistInPlayMusicStateAfterAddingPlaylistWithLongClick() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(4, 7, 8)
         val testedItemsOneBasedIndexes = testedItemsZeroBasedIndexes.map { it + 1 }
         val longClickItemZeroBasedIndex = 5
@@ -708,7 +711,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistOnPlayMusicStateWithCurrentTrackKeepsCurrentTrack() = testActivity {
+    fun test13_checkLoadPlaylistOnPlayMusicStateWithCurrentTrackKeepsCurrentTrack() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
         val playlistName = "My Playlist"
@@ -845,7 +848,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistOnPlayMusicStateWithoutCurrentTrackChangesCurrentTrack() {
+    fun test14_checkLoadPlaylistOnPlayMusicStateWithoutCurrentTrackChangesCurrentTrack() {
 
         testActivity {
             val playlistName = "My Playlist"
@@ -974,7 +977,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistInAddPlaylistStateKeepsSelectedItemsById() {
+    fun test15_checkLoadPlaylistInAddPlaylistStateKeepsSelectedItemsById() {
 
         testActivity {
             val playlistAItemsZeroBasedIndexes = listOf(0, 3, 6, 7, 8, 9)
@@ -1058,7 +1061,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistInAddPlaylistStateKeepsCurrentTrackWhenReturningToPlayMusicState() = testActivity {
+    fun test16_checkLoadPlaylistInAddPlaylistStateKeepsCurrentTrackWhenReturningToPlayMusicState() = testActivity {
         val playlistItemsZeroBasedIndexes = listOf(0, 3, 6, 7, 8, 9)
         val selectedItem = 1
         val playlistName = "Party Songs"
@@ -1121,7 +1124,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkPlaylistSavedAfterSelectingSongsAfterLoadingPlaylistInAddPlaylistState() = testActivity {
+    fun test17_checkPlaylistSavedAfterSelectingSongsAfterLoadingPlaylistInAddPlaylistState() = testActivity {
         val playlistOne = listOf(1, 2, 3)
         val selectItemsOne = listOf(0, 1)
         val selectItemsTwo = listOf(2, 3)
@@ -1180,7 +1183,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkCancellingAddPlaylistKeepsCurrentPlaylist() = testActivity {
+    fun test18_checkCancellingAddPlaylistKeepsCurrentPlaylist() = testActivity {
         val playlistAItemsZeroBasedIndexes = listOf(3, 7, 8)
         val playlistAItemsOneBasedIndexes = playlistAItemsZeroBasedIndexes.map { it + 1 }
         val playlistName = "Cool Songs"
@@ -1236,7 +1239,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkCancelingAddPlaylistKeepsCurrentTrackPlayingState() = testActivity {
+    fun test19_checkCancelingAddPlaylistKeepsCurrentTrackPlayingState() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
 
@@ -1319,7 +1322,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkDeletePlaylistOnPlayMusicStateDeletingPlaylistThatIsNotCurrentPlaylist() = testActivity {
+    fun test20_checkDeletePlaylistOnPlayMusicStateDeletingPlaylistThatIsNotCurrentPlaylist() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
@@ -1401,7 +1404,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkDeletePlaylistOnPlayMusicStateWithCurrentPlaylistBeingDeleted() = testActivity {
+    fun test21_checkDeletePlaylistOnPlayMusicStateWithCurrentPlaylistBeingDeleted() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val testedItemsOneBasedIndexes = testedItemsZeroBasedIndexes.map { it + 1 }
         val playlistName = "My Playlist"
@@ -1505,7 +1508,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkDeletePlaylistOnAddPlaylistStateDeletingPlaylistThatIsNotDisplayingAndNotCurrentPlaylist() = testActivity {
+    fun test22_checkDeletePlaylistOnAddPlaylistStateDeletingPlaylistThatIsNotDisplayingAndNotCurrentPlaylist() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
@@ -1601,7 +1604,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkDeletePlaylistOnAddPlaylistStateWithCurrentDisplayingAndCurrentPlaylistBeingDeleted()  = testActivity {
+    fun test23_checkDeletePlaylistOnAddPlaylistStateWithCurrentDisplayingAndCurrentPlaylistBeingDeleted()  = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val playlistName = "My Playlist"
         PlayMusicScreen(this).apply {
@@ -1714,7 +1717,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkSearchInPlayMusicStateChangeCurrentPlaylistToAllSongs()  = testActivity {
+    fun test24_checkSearchInPlayMusicStateChangeCurrentPlaylistToAllSongs()  = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val playlistName = "My Playlist"
 
@@ -1752,7 +1755,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkSearchInAddPlaylistStateDisplaysAllSongsOnAddPlaylistStateAndKeepsCurrentPlaylistInPlayMusicState()  = testActivity {
+    fun test25_checkSearchInAddPlaylistStateDisplaysAllSongsOnAddPlaylistStateAndKeepsCurrentPlaylistInPlayMusicState()  = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val playlistName = "My Playlist"
         val playlist = testedItemsZeroBasedIndexes.map { songFakeList[it] }

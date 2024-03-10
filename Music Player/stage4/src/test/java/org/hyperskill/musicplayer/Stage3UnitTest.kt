@@ -10,18 +10,24 @@ import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.internals.CustomMediaPlayerShadow
 import org.hyperskill.musicplayer.internals.CustomShadowAsyncDifferConfig
 import org.hyperskill.musicplayer.internals.CustomShadowCountDownTimer
+import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.mainMenuItemIdAddPlaylist
+import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.mainMenuItemIdLoadPlaylist
 import org.hyperskill.musicplayer.internals.MusicPlayerUnitTests
+import org.hyperskill.musicplayer.internals.PlayMusicScreen
 import org.hyperskill.musicplayer.internals.SongFake
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runners.MethodSorters
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Duration
 
 // version 1.4.1
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowCountDownTimer::class, CustomShadowAsyncDifferConfig::class])
 @RunWith(RobolectricTestRunner::class)
 class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java) {
@@ -43,24 +49,6 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         }
     }
 
-    private val mainButtonSearch by lazy {
-        val view = activity.findViewByString<Button>("mainButtonSearch")
-
-        val expectedText = "search"
-        val actualText = view.text.toString().lowercase()
-        assertEquals("wrong text for mainButtonSearch", expectedText, actualText)
-
-        view
-    }
-
-    private val mainSongList by lazy {
-        activity.findViewByString<RecyclerView>("mainSongList")
-    }
-
-    private val mainFragmentContainer by lazy {
-        activity.findViewByString<FragmentContainerView>("mainFragmentContainer")
-    }
-
     @Before
     fun setUp() {
         CustomShadowCountDownTimer.handler = Handler(activity.mainLooper)
@@ -70,10 +58,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkControllerTriggersMediaPlayerOnDefaultItem(){
-
-        testActivity {
-            mainButtonSearch
+    fun test00_checkControllerTriggersMediaPlayerOnDefaultItem() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
 
             if(isPlayerNull().not()) {
@@ -110,14 +96,14 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkImgButtonTriggersMediaPlayerOnListItem() {
-        testActivity {
+    fun test01_checkImgButtonTriggersMediaPlayerOnListItem() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
             val controllerUi = mainFragmentContainer.getControllerViews()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch no MediaPlayer should be playing"
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -146,7 +132,11 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
                 val messagePlayerShouldStartPlay =
                     "After click on songItemImgBtnPlayPause the song item should start playing."
-                player.assertControllerPlay(messagePlayerShouldStartPlay, controllerUi, expectedPosition = playingTime)
+                player.assertControllerPlay(
+                    messagePlayerShouldStartPlay,
+                    controllerUi,
+                    expectedPosition = playingTime
+                )
 
                 songItemImgBtnPlayPause.clickAndRun(20_000)
                 // state paused
@@ -156,14 +146,22 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
                 val messagePlayingShouldPauseOnClick =
                     "After click on songItemImgBtnPlayPause on a playing song the mediaPlayer should pause."
-                player.assertControllerPause(messagePlayingShouldPauseOnClick, controllerUi, expectedPosition = playingTime)
+                player.assertControllerPause(
+                    messagePlayingShouldPauseOnClick,
+                    controllerUi,
+                    expectedPosition = playingTime
+                )
 
                 playingTime += songItemImgBtnPlayPause.clickAndRun(10_100)
                 // state playing
 
                 val messagePlayingShouldResumeOnClick =
                     "After click on songItemImgBtnPlayPause on a paused song the mediaPlayer should resume playing."
-                player.assertControllerPlay(messagePlayingShouldResumeOnClick, controllerUi, expectedPosition = playingTime)
+                player.assertControllerPlay(
+                    messagePlayingShouldResumeOnClick,
+                    controllerUi,
+                    expectedPosition = playingTime
+                )
 
                 controllerUi.btnStop.clickAndRun(10_000)
                 // state stopped
@@ -176,13 +174,13 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkSeekBarChangeWhilePlaying() {
-        testActivity {
+    fun test02_checkSeekBarChangeWhilePlaying() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing"
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -194,7 +192,11 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             playingTime += controllerUi.btnPlayPause.clickAndRun(1_200)  // play
             val messagePlayerShouldStartPlay =
                 "After click on controllerBtnPlayPause right after mainButtonSearch the default song item should start playing."
-            player.assertControllerPlay(messagePlayerShouldStartPlay, controllerUi, expectedPosition = playingTime)
+            player.assertControllerPlay(
+                messagePlayerShouldStartPlay,
+                controllerUi,
+                expectedPosition = playingTime
+            )
 
             controllerUi.seekBar.setProgressAsUser(100)  // seek with play
             shadowLooper.idleFor(Duration.ofMillis(100))
@@ -203,7 +205,11 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             val errorSeekBarChange =
                 "After changing controllerSeekBar progress as user on a playing song " +
                         "the mediaPlayer should update its currentPosition and remain playing."
-            player.assertControllerPlay(errorSeekBarChange, controllerUi, expectedPosition = playingTime)
+            player.assertControllerPlay(
+                errorSeekBarChange,
+                controllerUi,
+                expectedPosition = playingTime
+            )
 
             controllerUi.btnPlayPause.clickAndRun()  // pause
             val messagePauseAfterSeekBarChange =
@@ -215,13 +221,13 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkSeekBarBeforePlaying() {
-        testActivity {
+    fun test03_checkSeekBarBeforePlaying() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -247,19 +253,21 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 "It should be possible to play a song after " +
                         "changing controllerSeekBar progress as user before playing a song."
             player.assertControllerPlay(
-                messagePlayAfterSeekBarChangeBeforePlaying, controllerUi, expectedPosition = playingTime
+                messagePlayAfterSeekBarChangeBeforePlaying,
+                controllerUi,
+                expectedPosition = playingTime
             )
         }
     }
 
     @Test
-    fun checkSeekBarAfterStop() {
-        testActivity {
+    fun test04_checkSeekBarAfterStop() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -283,13 +291,13 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkSeekBarAfterPause() {
-        testActivity {
+    fun test05_checkSeekBarAfterPause() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -313,13 +321,13 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkMusicEnd() {
-        testActivity {
+    fun test06_checkMusicEnd() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -346,13 +354,13 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkSeekBarChangeAfterMusicEnd() {
-        testActivity {
+    fun test07_checkSeekBarChangeAfterMusicEnd() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -363,7 +371,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             controllerUi.seekBar.setProgressAsUser(210)  // seek with stop
             controllerUi.btnPlayPause.clickAndRun(10_400)  // play until end
 
-            val messageSeekBarChangeAfterStop = "When a song ends the player should stop playing."
+            val messageSeekBarChangeAfterStop =
+                "When a song ends the player should stop playing."
             player.assertControllerStop(messageSeekBarChangeAfterStop, controllerUi)
 
             controllerUi.seekBar.setProgressAsUser(200) // seek with stop
@@ -373,19 +382,21 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 "It should be possible to change controllerSeekBar progress as user " +
                         "after a music ends and resume playing the song."
             player.assertControllerPlay(
-                messagePlayAfterSeekBarChangeAfterMusicEnd, controllerUi, expectedPosition = playingTime
+                messagePlayAfterSeekBarChangeAfterMusicEnd,
+                controllerUi,
+                expectedPosition = playingTime
             )
         }
     }
 
     @Test
-    fun checkPlayAfterMusicEnd() {
-        testActivity {
+    fun test08_checkPlayAfterMusicEnd() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -396,27 +407,30 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             controllerUi.seekBar.setProgressAsUser(210) // seek with stop
             controllerUi.btnPlayPause.clickAndRun(10_000) // play until end
 
-            val messageSeekBarChangeAfterStop = "When a song ends the player should stop playing."
+            val messageSeekBarChangeAfterStop =
+                "When a song ends the player should stop playing."
             player.assertControllerStop(messageSeekBarChangeAfterStop, controllerUi)
 
             val playingTime = controllerUi.btnPlayPause.clickAndRun(10_400) // play
             val messagePlayAfterSeekBarChangeAfterMusicEnd =
                 "It should be possible to play again a song after song end."
             player.assertControllerPlay(
-                messagePlayAfterSeekBarChangeAfterMusicEnd, controllerUi, expectedPosition = playingTime
+                messagePlayAfterSeekBarChangeAfterMusicEnd,
+                controllerUi,
+                expectedPosition = playingTime
             )
         }
     }
 
     @Test
-    fun checkImgButtonPlayAfterMusicEnd() {
-        testActivity {
+    fun test09_checkImgButtonPlayAfterMusicEnd() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
             mainSongList
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -424,7 +438,7 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             val selectedItemIndex = 2
             CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedItemIndex])
-            mainSongList.assertSingleListItem(selectedItemIndex){ itemViewSupplier ->
+            mainSongList.assertSingleListItem(selectedItemIndex) { itemViewSupplier ->
                 var songItemImgBtnPlayPause =
                     itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
                 val controllerUi = mainFragmentContainer.getControllerViews()
@@ -433,7 +447,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 controllerUi.seekBar.setProgressAsUser(210)  // seek with play
                 shadowLooper.idleFor(Duration.ofMillis(20_000)) // play until end
 
-                val messageSeekBarChangeAfterStop = "When a song ends the player should stop playing."
+                val messageSeekBarChangeAfterStop =
+                    "When a song ends the player should stop playing."
                 player.assertControllerStop(messageSeekBarChangeAfterStop, controllerUi)
 
                 songItemImgBtnPlayPause =
@@ -442,7 +457,9 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 val messagePlayAfterSeekBarChangeAfterMusicEnd =
                     "It should be possible to play again a song after song end."
                 player.assertControllerPlay(
-                    messagePlayAfterSeekBarChangeAfterMusicEnd, controllerUi, expectedPosition = playingTime
+                    messagePlayAfterSeekBarChangeAfterMusicEnd,
+                    controllerUi,
+                    expectedPosition = playingTime
                 )
             }
         }
@@ -450,15 +467,14 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
 
     @Test
-    fun checkSongChange() {
-
-        testActivity {
+    fun test10_checkSongChange() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
             mainSongList
 
             mainButtonSearch.clickAndRun()
 
-            if(isPlayerNull().not()) {
+            if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
                     "After initial click on mainButtonSearch MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
@@ -466,7 +482,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             val controllerUi = mainFragmentContainer.getControllerViews()
 
-            CustomMediaPlayerShadow.wasResetOrRecreated = true  // consider first as already created
+            CustomMediaPlayerShadow.wasResetOrRecreated =
+                true  // consider first as already created
             mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
                 CustomMediaPlayerShadow.setFakeSong(song)
                 val songItemImgBtnPlayPause =
@@ -477,14 +494,23 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                     "After click on songItemImgBtnPlayPause on a different songItem the current song should change."
                 assertTrue(messageSongChange, CustomMediaPlayerShadow.wasResetOrRecreated)
 
-                val messagePlaySongItem = "After first click on songItemImgBtnPlayPause that song should play."
-                player.assertControllerPlay(messagePlaySongItem, controllerUi, expectedPosition = playingTime)
+                val messagePlaySongItem =
+                    "After first click on songItemImgBtnPlayPause that song should play."
+                player.assertControllerPlay(
+                    messagePlaySongItem,
+                    controllerUi,
+                    expectedPosition = playingTime
+                )
 
                 controllerUi.btnPlayPause.clickAndRun()  // pause
 
                 val messagePauseSongItem =
                     "After click on controllerBtnPlayPause with a playing song that song should be paused."
-                player.assertControllerPause(messagePauseSongItem, controllerUi, expectedPosition = playingTime)
+                player.assertControllerPause(
+                    messagePauseSongItem,
+                    controllerUi,
+                    expectedPosition = playingTime
+                )
 
                 controllerUi.btnStop.clickAndRun()  // stop
 
@@ -498,9 +524,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkCancelAddPlaylistKeepsPlayingCurrentSelectedSong() {
-
-        testActivity {
+    fun test11_checkCancelAddPlaylistKeepsPlayingCurrentSelectedSong() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
             mainSongList
 
@@ -528,7 +553,10 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 )
             }
 
-            playingTime += activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist, millis = 1_000)
+            playingTime += activity.clickMenuItemAndRun(
+                mainMenuItemIdAddPlaylist,
+                millis = 1_000
+            )
 
             playingTime += mainFragmentContainer
                 .findViewByString<Button>("addPlaylistBtnCancel")
@@ -590,9 +618,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistKeepsPlayingCurrentSelectedSong() {
-
-        testActivity {
+    fun test12_checkLoadPlaylistKeepsPlayingCurrentSelectedSong() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
             mainSongList
 
@@ -616,7 +643,10 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 )
             }
 
-            playingTime += activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist, millis = 3_000)
+            playingTime += activity.clickMenuItemAndRun(
+                mainMenuItemIdAddPlaylist,
+                millis = 3_000
+            )
 
             val playlistName = "My Playlist"
 
@@ -762,9 +792,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkLoadPlaylistChangesSongIfCurrentSelectedSongNotInPlaylist() {
-
-        testActivity {
+    fun test13_checkLoadPlaylistChangesSongIfCurrentSelectedSongNotInPlaylist() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
             mainSongList
 
@@ -793,7 +822,10 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 )
             }
 
-            playingTime += activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist, millis = 3_000)
+            playingTime += activity.clickMenuItemAndRun(
+                mainMenuItemIdAddPlaylist,
+                millis = 3_000
+            )
 
             val playlistName = "Yes Playlist"
 
@@ -934,9 +966,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun checkControllerKeepsStateAfterCancelAddPlaylist() {
-
-        testActivity {
+    fun test14_checkControllerKeepsStateAfterCancelAddPlaylist() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
             var playingTime = 0
 
