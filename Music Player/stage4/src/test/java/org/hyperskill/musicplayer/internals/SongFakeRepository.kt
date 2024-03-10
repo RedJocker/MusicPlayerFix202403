@@ -2,7 +2,7 @@ package org.hyperskill.musicplayer
 
 import org.hyperskill.musicplayer.internals.SongFake
 
-// version 1.3
+// version 2.0
 object SongFakeRepository {
 
     val fakeSongData = listOf(

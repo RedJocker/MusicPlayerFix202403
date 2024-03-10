@@ -6,10 +6,15 @@ import android.widget.Button
 import androidx.core.database.sqlite.transaction
 import androidx.fragment.app.FragmentContainerView
 import androidx.recyclerview.widget.RecyclerView
+import org.hyperskill.musicplayer.internals.AddPlaylistScreen
 import org.hyperskill.musicplayer.internals.CustomMediaPlayerShadow
 import org.hyperskill.musicplayer.internals.CustomShadowAsyncDifferConfig
 import org.hyperskill.musicplayer.internals.CustomShadowCountDownTimer
+import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.ID_MAIN_BUTTON_SEARCH
+import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.mainMenuItemIdAddPlaylist
+import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.mainMenuItemIdLoadPlaylist
 import org.hyperskill.musicplayer.internals.MusicPlayerUnitTests
+import org.hyperskill.musicplayer.internals.PlayMusicScreen
 import org.hyperskill.musicplayer.internals.TestDatabaseFactory
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -37,30 +42,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 "$columnSongId INTEGER, " +
                 "PRIMARY KEY($columnPlaylistName, $columnSongId));"
 
-        const val mainMenuItemIdAddPlaylist = "mainMenuAddPlaylist"
-        const val mainMenuItemIdLoadPlaylist = "mainMenuLoadPlaylist"
-        const val mainMenuItemIdDeletePlaylist = "mainMenuDeletePlaylist"
-
         const val ALL_SONGS = "All Songs"
-
-    }
-
-    private val mainButtonSearch by lazy {
-        val view = activity.findViewByString<Button>("mainButtonSearch")
-
-        val expectedText = "search"
-        val actualText = view.text.toString().lowercase()
-        assertEquals("wrong text for mainButtonSearch", expectedText, actualText)
-
-        view
-    }
-
-    private val mainSongList by lazy {
-        activity.findViewByString<RecyclerView>("mainSongList")
-    }
-
-    private val mainFragmentContainer by lazy {
-        activity.findViewByString<FragmentContainerView>("mainFragmentContainer")
     }
 
     @Before
@@ -71,9 +53,8 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun test00_checkDatabaseDataAfterPlaylistSave() {
-
-        testActivity {
+    fun test00_checkDatabaseDataAfterPlaylistSave() = testActivity {
+        PlayMusicScreen(this).apply {
             mainButtonSearch
 
             mainButtonSearch.clickAndRun()
@@ -86,14 +67,92 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
             addPlaylist(
+                playlistName = playlistName,
+                selectedItemsIndex = selectedItemsIndex,
+                songListView = mainSongList,
+                fragmentContainer = mainFragmentContainer,
+            )
+
+            shadowLooper.idleFor(Duration.ofSeconds(3))
+
+            TestDatabaseFactory(activity).readableDatabase.use { readableDatabase ->
+                val cursor = readableDatabase.query(
+                    tableName, null, null,
+                    null, null, null, null
+                )
+
+                val columnSongIdIndex = cursor.getColumnIndex(columnSongId)
+                val columnPlaylistNameIndex = cursor.getColumnIndex(columnPlaylistName)
+
+                val actualDatabaseData = generateSequence {
+                    cursor.moveToNext().let { hasNext ->
+                        if (hasNext) {
+                            val playlistName = cursor.getString(columnPlaylistNameIndex)
+                            val songId = cursor.getInt(columnSongIdIndex)
+
+                            playlistName to songId
+                        } else {
+                            cursor.close()
+                            null
+                        }
+                    }
+                }.toList()
+
+                assertEquals(
+                    "The number of rows in table $tableName is incorrect,",
+                    expectedDatabaseData.size,
+                    actualDatabaseData.size
+                )
+
+                expectedDatabaseData.forEachIndexed { i, expectedData ->
+                    val actualData = actualDatabaseData[i]
+
+
+                    val messageWrongData =
+                        "Incorrect data stored in table $tableName,"
+                    assertEquals(messageWrongData, expectedData, actualData)
+                }
+            }
+        }
+        Unit
+    }
+
+    @Test
+    fun test01_checkSamePlaylistSaveTwiceNoDuplicatesOnDatabase() = testActivity {
+        val playlistName = "cool songs"
+        val selectedItemsIndex = listOf(2, 5, 6)
+        val expectedDatabaseData = selectedItemsIndex.map {
+            playlistName to SongFakeRepository.fakeSongData[it].id
+        }
+        PlayMusicScreen(this).apply {
+            mainButtonSearch.clickAndRun()
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
                     playlistName = playlistName,
                     selectedItemsIndex = selectedItemsIndex,
                     songListView = mainSongList,
                     fragmentContainer = mainFragmentContainer,
             )
+        }
+        PlayMusicScreen(this).apply {
 
             shadowLooper.idleFor(Duration.ofSeconds(3))
 
+            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
+            addPlaylist(
+                    playlistName = playlistName,
+                    selectedItemsIndex = selectedItemsIndex,
+                    songListView = mainSongList,
+                    fragmentContainer = mainFragmentContainer,
+            )
+        }
+        PlayMusicScreen(this).apply {
+
+            shadowLooper.idleFor(Duration.ofSeconds(3))
             TestDatabaseFactory(activity).readableDatabase.use { readableDatabase ->
                 val cursor = readableDatabase.query(
                         tableName, null, null,
@@ -133,115 +192,43 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 }
             }
         }
+        Unit
     }
 
     @Test
-    fun test01_checkSamePlaylistSaveTwiceNoDuplicatesOnDatabase() {
-        testActivity {
-            mainButtonSearch
-
-            mainButtonSearch.clickAndRun()
-
-            val playlistName = "cool songs"
-            val selectedItemsIndex = listOf(2, 5, 6)
-            val expectedDatabaseData = selectedItemsIndex.map {
-                playlistName to SongFakeRepository.fakeSongData[it].id
-            }
-
-            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = selectedItemsIndex,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer,
-            )
-
-            shadowLooper.idleFor(Duration.ofSeconds(3))
-
-            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-            addPlaylist(
-                    playlistName = playlistName,
-                    selectedItemsIndex = selectedItemsIndex,
-                    songListView = mainSongList,
-                    fragmentContainer = mainFragmentContainer,
-            )
-
-            shadowLooper.idleFor(Duration.ofSeconds(3))
-
-            TestDatabaseFactory(activity).readableDatabase.use { readableDatabase ->
-                val cursor = readableDatabase.query(
-                        tableName, null, null,
-                        null, null, null, null
-                )
-
-                val columnSongIdIndex = cursor.getColumnIndex(columnSongId)
-                val columnPlaylistNameIndex = cursor.getColumnIndex(columnPlaylistName)
-
-                val actualDatabaseData = generateSequence {
-                    cursor.moveToNext().let { hasNext ->
-                        if (hasNext) {
-                            val playlistName = cursor.getString(columnPlaylistNameIndex)
-                            val songId = cursor.getInt(columnSongIdIndex)
-
-                            playlistName to songId
-                        } else {
-                            cursor.close()
-                            null
-                        }
-                    }
-                }.toList()
-
-                assertEquals(
-                        "The number of rows in table $tableName is incorrect,",
-                        expectedDatabaseData.size,
-                        actualDatabaseData.size
-                )
-
-                expectedDatabaseData.forEachIndexed { i, expectedData ->
-                    val actualData = actualDatabaseData[i]
-
-
-                    val messageWrongData =
-                            "Incorrect data stored in table $tableName,"
-                    assertEquals(messageWrongData, expectedData, actualData)
-                }
-            }
+    fun test02_checkDatabaseDataAfterPlaylistSaveWithExistingPlaylistNameAndDifferentSongs() = testActivity {
+        val playlistName = "cool songs"
+        val selectedOldItemsIndex = listOf(2, 5, 6)
+        val selectedNewItemsIndex = listOf(1, 5, 7, 8)
+        val expectedDatabaseData = selectedNewItemsIndex.map {
+            playlistName to SongFakeRepository.fakeSongData[it].id
         }
-    }
 
-    @Test
-    fun test02_checkDatabaseDataAfterPlaylistSaveWithExistingPlaylistNameAndDifferentSongs() {
-        testActivity {
-            mainButtonSearch
-
+        PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
-
-
-            val playlistName = "cool songs"
-            val selectedOldItemsIndex = listOf(2, 5, 6)
-            val selectedNewItemsIndex = listOf(1, 5, 7, 8)
-            val expectedDatabaseData = selectedNewItemsIndex.map {
-                playlistName to SongFakeRepository.fakeSongData[it].id
-            }
-
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
             addPlaylist(
                     playlistName = playlistName,
                     selectedItemsIndex = selectedOldItemsIndex,
                     songListView = mainSongList,
                     fragmentContainer = mainFragmentContainer,
             )
-
+        }
+        PlayMusicScreen(this).apply {
             shadowLooper.idleFor(Duration.ofSeconds(3))
-
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
             addPlaylist(
                     playlistName = playlistName,
                     selectedItemsIndex = selectedNewItemsIndex,
                     songListView = mainSongList,
                     fragmentContainer = mainFragmentContainer,
             )
-
+        }
+        PlayMusicScreen(this).apply {
             shadowLooper.idleFor(Duration.ofSeconds(3))
 
             TestDatabaseFactory(activity).readableDatabase.use { readableDatabase ->
@@ -282,43 +269,48 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 }
             }
         }
+        Unit
     }
 
     @Test
-    fun test03_checkDatabaseDifferentPlaylistSaves() {
-        testActivity {
-            mainButtonSearch
+    fun test03_checkDatabaseDifferentPlaylistSaves() = testActivity {
+        val playlistNameA = "cool songs"
+        val playlistNameB = "ok songs"
+        val selectedPlaylistAItemsIndex = listOf(2, 5, 6)
+        val selectedPlaylistBItemsIndex = listOf(3, 4, 7, 8)
 
+        val expectedDatabaseData = selectedPlaylistAItemsIndex.map {
+            playlistNameA to SongFakeRepository.fakeSongData[it].id
+        } + selectedPlaylistBItemsIndex.map {
+            playlistNameB to SongFakeRepository.fakeSongData[it].id
+        }
+
+        PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
-
-            val playlistNameA = "cool songs"
-            val playlistNameB = "ok songs"
-            val selectedPlaylistAItemsIndex = listOf(2, 5, 6)
-            val selectedPlaylistBItemsIndex = listOf(3, 4, 7, 8)
-
-            val expectedDatabaseData = selectedPlaylistAItemsIndex.map {
-                playlistNameA to SongFakeRepository.fakeSongData[it].id
-            } + selectedPlaylistBItemsIndex.map {
-                playlistNameB to SongFakeRepository.fakeSongData[it].id
-            }
-
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
             addPlaylist(
                     playlistName = playlistNameA,
                     selectedItemsIndex = selectedPlaylistAItemsIndex,
                     songListView = mainSongList,
                     fragmentContainer = mainFragmentContainer,
             )
-
+        }
+        PlayMusicScreen(this).apply {
             shadowLooper.idleFor(Duration.ofSeconds(3))
 
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
+        }
+        AddPlaylistScreen(this).apply {
             addPlaylist(
                     playlistName = playlistNameB,
                     selectedItemsIndex = selectedPlaylistBItemsIndex,
                     songListView = mainSongList,
                     fragmentContainer = mainFragmentContainer,
             )
+        }
+        PlayMusicScreen(this).apply {
 
             shadowLooper.idleFor(Duration.ofSeconds(3))
 
@@ -360,6 +352,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 }
             }
         }
+        Unit
     }
 
     @Test
@@ -384,21 +377,26 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         }
 
         testActivity {
-            mainButtonSearch
+            PlayMusicScreen(this).apply {
 
-            mainButtonSearch.clickAndRun()
+                mainButtonSearch.clickAndRun()
 
-            val expectedItems = fakeData.map { SongFakeRepository.fakeSongData[it.second] }
-            CustomMediaPlayerShadow.setFakeSong(expectedItems.first())
+                val expectedItems = fakeData.map { SongFakeRepository.fakeSongData[it.second] }
+                CustomMediaPlayerShadow.setFakeSong(expectedItems.first())
 
-            loadPlaylist(
+                loadPlaylist(
                     menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
                     expectedPlaylistNameList = listOf(ALL_SONGS, playlistName),
                     playlistToLoadIndex = 1
-            )
+                )
 
-            mainSongList.assertListItems(expectedItems) { itemViewSupplier, position, song ->
-                assertSongItem("Incorrect item after loading a list from database", itemViewSupplier(), song)
+                mainSongList.assertListItems(expectedItems) { itemViewSupplier, position, song ->
+                    assertSongItem(
+                        "Incorrect item after loading a list from database",
+                        itemViewSupplier(),
+                        song
+                    )
+                }
             }
         }
     }
@@ -425,22 +423,24 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         }
 
         testActivity {
-            val expectedItems = fakeData.map { SongFakeRepository.fakeSongData[it.second] }
-            CustomMediaPlayerShadow.setFakeSong(expectedItems.first())
+            PlayMusicScreen(this).apply {
+                val expectedItems = fakeData.map { SongFakeRepository.fakeSongData[it.second] }
+                CustomMediaPlayerShadow.setFakeSong(expectedItems.first())
 
-            loadPlaylist(
+                loadPlaylist(
                     menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
                     expectedPlaylistNameList = listOf(ALL_SONGS, playlistName),
                     playlistToLoadIndex = 1
-            )
+                )
 
-            mainSongList.assertListItems(expectedItems) { itemViewSupplier, position, song ->
-                assertSongItem(
-                        "If a list is loaded before mainButtonSearch is clicked " +
+                mainSongList.assertListItems(expectedItems) { itemViewSupplier, position, song ->
+                    assertSongItem(
+                        "If a list is loaded before $ID_MAIN_BUTTON_SEARCH is clicked " +
                                 "then the search should be done automatically before loading the list",
                         itemViewSupplier(),
                         song
-                )
+                    )
+                }
             }
         }
     }

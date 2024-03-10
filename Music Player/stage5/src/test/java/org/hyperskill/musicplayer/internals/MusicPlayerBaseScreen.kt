@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.MainActivity
 import org.junit.Assert
 
+// version 2.0
 open class MusicPlayerBaseScreen(private val test: MusicPlayerUnitTests<MainActivity>) {
     companion object {
         const val ID_MAIN_BUTTON_SEARCH = "mainButtonSearch"

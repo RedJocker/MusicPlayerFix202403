@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.net.HttpCookie;
 import java.util.List;
 import java.util.Map;
-// version 1.3
+// version 2.0
 @Implements(MediaPlayer.class)
 public class CustomMediaPlayerShadow extends ShadowMediaPlayer {
 

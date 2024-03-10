@@ -1,13 +1,17 @@
 package org.hyperskill.musicplayer.internals
 
+import android.media.MediaPlayer
 import android.view.View
 import android.widget.Button
 import android.widget.ImageButton
 import android.widget.SeekBar
 import android.widget.TextView
 import org.hyperskill.musicplayer.MainActivity
+import org.junit.Assert
 import org.junit.Assert.assertEquals
+import kotlin.math.abs
 
+// version 2.0
 class PlayMusicScreen(
     private val test: MusicPlayerUnitTests<MainActivity>,
     val initAssertions: Boolean = false
@@ -127,5 +131,47 @@ class PlayMusicScreen(
             song.duration.timeString(),
             songItemTvDuration.text.toString()
         )
+    }
+
+    fun assertControllerState(
+        errorMessage: String, songFake: SongFake, expectedPosition: Int
+    ) = with(test) {
+        val messageTotalTimeTv = "$errorMessage On controllerTvTotalTime text"
+        assertEquals(messageTotalTimeTv, songFake.duration.timeString(), controllerTvTotalTime.text.toString())
+
+        val messageSeekBar = "$errorMessage On controllerSeekBar progress"
+        assertEquals(messageSeekBar, expectedPosition / 1000, controllerSeekBar.progress)
+
+        val messageCurrentTimeTv = "$errorMessage On controllerTvCurrentTime text"
+        assertEquals(messageCurrentTimeTv, expectedPosition.timeString(), controllerTvCurrentTime.text.toString())
+    }
+
+    fun MediaPlayer.assertControllerPlay(errorMessage: String, expectedPosition: Int) {
+        assertController(errorMessage, expectedPosition, expectedIsPlaying = true)
+    }
+
+    fun MediaPlayer.assertControllerPause(errorMessage: String, expectedPosition: Int) {
+        assertController(errorMessage, expectedPosition, expectedIsPlaying = false)
+    }
+
+    fun MediaPlayer.assertControllerStop(errorMessage: String) {
+        assertController(errorMessage, expectedPosition = 0, expectedIsPlaying = false)
+    }
+
+    private fun MediaPlayer.assertController(
+        errorMessage: String,
+        expectedPosition: Int,
+        expectedIsPlaying: Boolean
+    ) = with(test) {
+        assertEquals("$errorMessage On mediaPlayer isPlaying", expectedIsPlaying, isPlaying)
+
+        val messageCurrentPosition = "$errorMessage On mediaPlayer currentPosition expected: $expectedPosition found: $currentPosition"
+        Assert.assertTrue(messageCurrentPosition, abs(expectedPosition - currentPosition) < 100)
+
+        val messageSeekBar = "$errorMessage On controllerSeekBar progress"
+        assertEquals(messageSeekBar, expectedPosition / 1000, controllerSeekBar.progress)
+
+        val messageCurrentTimeTv = "$errorMessage On controllerTvCurrentTime text"
+        assertEquals(messageCurrentTimeTv, expectedPosition.timeString(), controllerTvCurrentTime.text.toString())
     }
 }

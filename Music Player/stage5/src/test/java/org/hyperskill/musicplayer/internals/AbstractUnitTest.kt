@@ -1,11 +1,13 @@
 package org.hyperskill.musicplayer.internals
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
 import android.widget.SeekBar
+import androidx.recyclerview.widget.RecyclerView
 import org.junit.Assert
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -14,11 +16,13 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.android.controller.ActivityController
 import org.robolectric.shadow.api.Shadow
 import org.robolectric.shadows.ShadowActivity
+import org.robolectric.shadows.ShadowAlertDialog
 import org.robolectric.shadows.ShadowLooper
 import org.robolectric.shadows.ShadowToast
 import java.time.Duration
+import java.util.concurrent.TimeUnit
 
-// version 1.3
+// version 2.0
 abstract class AbstractUnitTest<T : Activity>(clazz: Class<T>) {
 
     /**
@@ -241,6 +245,226 @@ abstract class AbstractUnitTest<T : Activity>(clazz: Class<T>) {
             val messageWrongRequestCode =
                 "Did you use the requestCode stated on description while requiring permissions?"
             Assert.assertEquals(messageWrongRequestCode, expectedRequestCode, actualRequestCode)
+        }
+    }
+
+    /**
+     * Use this method to perform clicks on menu items.
+     *
+     * It will assert the existence of the identifier. If the identifier exists but is not
+     * a menu item then the assertion will succeed, but no click will be performed.
+     *
+     * Will also advance the clock millis milliseconds and run
+     * enqueued Runnable scheduled to run on main looper in that timeframe.
+     * Default value for millis is 500
+     *
+     */
+    fun Activity.clickMenuItemAndRun(idString: String, millis: Long = 500): Int {
+        val clock = SystemClock.currentGnssTimeClock()
+        val timeBeforeClick = clock.millis()
+        val identifier = resources.getIdentifier(idString, "id", packageName)
+
+        assertTrue(
+            "The identifier with idString \"$idString\" was not found",
+            identifier != 0
+        )
+
+        shadowActivity.clickMenuItem(identifier)
+        val timeAfterClick = clock.millis()
+
+        shadowLooper.idleFor(Duration.ofMillis(millis- (timeAfterClick - timeBeforeClick)))
+        val timeAfterIdle = clock.millis()
+        return (timeAfterIdle - timeBeforeClick).toInt()
+    }
+
+    /**
+     *  Retrieve last shown AlertDialog.
+     *
+     *  Will only find android.app.AlertDialog and not androidx.appcompat.app.AlertDialog
+     *
+     *  Returns the AlertDialog instance paired with its shadow
+     */
+    fun getLastAlertDialogWithShadow(errorMessageNotFound: String) : Pair<AlertDialog, ShadowAlertDialog> {
+        val latestDialog:  AlertDialog? = ShadowAlertDialog.getLatestAlertDialog()
+
+        assertNotNull("$errorMessageNotFound$ Make sure you are using android.app.AlertDialog", latestDialog)
+
+        return latestDialog!! to Shadow.extract(latestDialog)
+    }
+
+    /**
+     *  Makes assertions on the contents of the RecyclerView.
+     *
+     *  Asserts that the size matches the size of fakeResultList and then
+     *  calls assertItems for each item of the list with the itemViewSupplier
+     *  so that it is possible to make assertions on that itemView.
+     *
+     *  Take attention to refresh references to views coming from itemView since RecyclerView
+     *  can change the instance of View for a determinate list item after an update to the list.
+     */
+    fun <T> RecyclerView.assertListItems(
+        fakeResultList: List<T>,
+        caseDescription: String = "",
+        assertItems: (itemViewSupplier: () -> View, position: Int, item: T) -> Unit
+    ) : Unit {
+
+        assertNotNull("Your recycler view adapter should not be null", this.adapter)
+
+        val expectedSize = fakeResultList.size
+
+        val actualSize = this.adapter!!.itemCount
+        Assert.assertEquals("Incorrect number of list items", expectedSize, actualSize)
+
+        if(expectedSize == 0) {
+            return
+        } else if(expectedSize > 0) {
+            val maxItemWidth = (0 until expectedSize)
+                .asSequence()
+                .mapNotNull { this.findViewHolderForAdapterPosition(it)?.itemView?.width }
+                .maxOrNull()
+                ?: throw AssertionError("$caseDescription No item is being displayed on RecyclerView, is it big enough to display one item?")
+            val listWidth = maxItemWidth * (expectedSize + 1)
+
+            val maxItemHeight = (0 until actualSize)
+                .asSequence()
+                .mapNotNull { this.findViewHolderForAdapterPosition(it)?.itemView?.height }
+                .maxOrNull()
+                ?: throw AssertionError("$caseDescription No item is being displayed on RecyclerView, is it big enough to display one item?")
+            val listHeight = maxItemHeight * (actualSize + 1)
+            this.layout(0,0, listHeight, listWidth)  // may increase clock time
+
+            for((i, song) in fakeResultList.withIndex()) {
+
+                val itemViewSupplier = {
+                    this.layout(0,0, listHeight, listWidth)  // may increase clock time
+                    scrollToPosition(i)
+                    shadowLooper.idleFor(500, TimeUnit.MILLISECONDS)
+                    findViewHolderForAdapterPosition(i)?.itemView
+                        ?: throw AssertionError("$caseDescription Could not find list item with index $i")
+                }
+                assertItems(itemViewSupplier, i, song)
+            }
+        } else {
+            throw IllegalStateException("size assertion was not effective")
+        }
+    }
+
+    /**
+     *  Makes assertions on the contents of the RecyclerView.
+     *
+     *  Asserts that the size matches the size of fakeResultList and then
+     *  calls assertItems for each item of the list with the itemViewSupplier
+     *  so that it is possible to make assertions on that itemView.
+     *
+     *  Take attention to refresh references to views coming from itemView since RecyclerView
+     *  can change the instance of View for a determinate list item after an update to the list.
+     *
+     *  This version also includes elapsedTime on the callBack to help keep track of time
+     *  since the clock might advance
+     */
+    fun <T> RecyclerView.assertListItems(
+        fakeResultList: List<T>,
+        caseDescription: String = "",
+        assertItems: (itemViewSupplier: () -> View, position: Int, item: T, elapsedTime: Int) -> Unit
+    ) : Unit {
+
+        assertNotNull("Your recycler view adapter should not be null", this.adapter)
+
+        val expectedSize = fakeResultList.size
+
+        val actualSize = this.adapter!!.itemCount
+        Assert.assertEquals("Incorrect number of list items", expectedSize, actualSize)
+
+        if(expectedSize == 0) {
+            return
+        } else if(expectedSize > 0) {
+            val maxItemWidth = (0 until expectedSize)
+                .asSequence()
+                .mapNotNull { this.findViewHolderForAdapterPosition(it)?.itemView?.width }
+                .maxOrNull()
+                ?: throw AssertionError("$caseDescription No item is being displayed on RecyclerView, is it big enough to display one item?")
+            val listWidth = maxItemWidth * (expectedSize + 1)
+
+            val maxItemHeight = (0 until actualSize)
+                .asSequence()
+                .mapNotNull { this.findViewHolderForAdapterPosition(it)?.itemView?.height }
+                .maxOrNull()
+                ?: throw AssertionError("$caseDescription No item is being displayed on RecyclerView, is it big enough to display one item?")
+            val listHeight = maxItemHeight * (actualSize + 1)
+            this.layout(0,0, listHeight, listWidth)  // may increase clock time
+
+            for((i, song) in fakeResultList.withIndex()) {
+                val timeBefore = SystemClock.currentGnssTimeClock().millis()
+                // setting height to ensure that all items are inflated. Height might change after assertItems, keep statement inside loop.
+                val itemViewSupplier = {
+                    this.layout(0,0, listHeight, listWidth)  // may increase clock time
+                    scrollToPosition(i)
+                    shadowLooper.idleFor(500, TimeUnit.MILLISECONDS)
+                    findViewHolderForAdapterPosition(i)?.itemView
+                        ?: throw AssertionError("$caseDescription Could not find list item with index $i")
+                }
+                val timeAfter = SystemClock.currentGnssTimeClock().millis()
+                assertItems(itemViewSupplier, i, song, (timeAfter -  timeBefore).toInt())
+            }
+
+        } else {
+            throw IllegalStateException("size assertion was not effective")
+        }
+    }
+
+    /**
+     *  Makes assertions on the contents of one item of the RecyclerView.
+     *
+     *  Asserts that the the size of the list is at least itemIndex + 1.
+     *
+     *  Calls assertItem with the itemViewSupplier so that it is possible to make assertions on that itemView.
+     *  Take attention to refresh references to views coming from itemView since RecyclerView
+     *  can change the instance of View for a determinate list item after an update to the list.
+     */
+    fun RecyclerView.assertSingleListItem(
+        itemIndex: Int,
+        caseDescription: String = "",
+        action: (itemViewSupplier: () -> View) -> Unit) {
+
+        assertNotNull("Your recycler view adapter should not be null", this.adapter)
+
+        val expectedMinSize = itemIndex + 1
+
+        val actualSize = this.adapter!!.itemCount
+        assertTrue(
+            "RecyclerView was expected to contain item with index $itemIndex, but its size was $actualSize",
+            actualSize >= expectedMinSize
+        )
+
+        if(actualSize >= expectedMinSize) {
+            val maxItemWidth = (0 until actualSize)
+                .asSequence()
+                .mapNotNull { this.findViewHolderForAdapterPosition(it)?.itemView?.width }
+                .maxOrNull()
+                ?: throw AssertionError("$caseDescription No item is being displayed on RecyclerView, is it big enough to display one item?")
+            val listWidth = maxItemWidth * (actualSize + 1)
+
+            val maxItemHeight = (0 until actualSize)
+                .asSequence()
+                .mapNotNull { this.findViewHolderForAdapterPosition(it)?.itemView?.height }
+                .maxOrNull()
+                ?: throw AssertionError("$caseDescription No item is being displayed on RecyclerView, is it big enough to display one item?")
+            val listHeight = maxItemHeight * (actualSize + 1)
+            this.layout(0,0, listHeight, listWidth)  // may increase clock time
+
+            val itemViewSupplier = {
+                this.layout(0, 0, listWidth, listHeight)  // may increase clock time
+                this.scrollToPosition(itemIndex)
+                shadowLooper.idleFor(500, TimeUnit.MILLISECONDS)
+                val itemView = (this.findViewHolderForAdapterPosition(itemIndex)?.itemView
+                    ?: throw AssertionError("$caseDescription Could not find list item with index $itemIndex"))
+                itemView
+            }
+
+            action(itemViewSupplier)
+
+        } else {
+            throw IllegalStateException("size assertion was not effective")
         }
     }
 }

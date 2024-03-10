@@ -10,6 +10,7 @@ import org.hyperskill.musicplayer.internals.CustomShadowAsyncDifferConfig
 import org.hyperskill.musicplayer.internals.CustomShadowCountDownTimer
 import org.hyperskill.musicplayer.internals.FakeContentProvider
 import org.hyperskill.musicplayer.internals.MusicPlayerUnitTests
+import org.hyperskill.musicplayer.internals.PlayMusicScreen
 import org.hyperskill.musicplayer.internals.SongFake
 import org.junit.After
 import org.junit.Assert
@@ -21,7 +22,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Duration
 
-// version 1.4
+// version 2.0
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowCountDownTimer::class, CustomShadowAsyncDifferConfig::class])
 @RunWith(RobolectricTestRunner::class)
@@ -32,24 +33,6 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         const val expectedRequestCode = 1
     }
 
-    private val mainButtonSearch by lazy {
-        val view = activity.findViewByString<Button>("mainButtonSearch")
-
-        val expectedText = "search"
-        val actualText = view.text.toString().lowercase()
-        Assert.assertEquals("wrong text for mainButtonSearch", expectedText, actualText)
-
-        view
-    }
-
-    private val mainSongList by lazy {
-        activity.findViewByString<RecyclerView>("mainSongList")
-    }
-
-    private val mainFragmentContainer by lazy {
-        activity.findViewByString<FragmentContainerView>("mainFragmentContainer")
-    }
-
     @Test
     fun test00_testPermissionRequestGranted() {
         val fakeSongResult = SongFakeRepository.fakeSongData.dropLast(3)
@@ -58,28 +41,26 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         CustomMediaPlayerShadow.setFakeSong(fakeSongResult.first())
 
         testActivity {
-            mainButtonSearch
-            mainSongList
+            PlayMusicScreen(this).apply {
+                mainButtonSearch.clickAndRun()
+                assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
 
-            mainButtonSearch.clickAndRun()
-            assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-
-            // grant permissions and invoke listener
-            shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-            activity.onRequestPermissionsResult(
+                // grant permissions and invoke listener
+                shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+                activity.onRequestPermissionsResult(
                     expectedRequestCode,
                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                     intArrayOf(PackageManager.PERMISSION_GRANTED)
-            )
-            shadowLooper.idleFor(Duration.ofSeconds(3))
-            //
+                )
+                shadowLooper.idleFor(Duration.ofSeconds(3))
+                //
 
-
-            mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
-                assertSongItem(
+                mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
+                    assertSongItem(
                         "After permission granted the list should load with song files data.",
                         itemViewSupplier(), song
-                )
+                    )
+                }
             }
         }
     }
@@ -90,25 +71,22 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         setupContentProvider(fakeSongResult)
 
         testActivity {
+            PlayMusicScreen(this).apply {
+                FakeContentProvider.hasPermissionToReadExternalStorage = false
+                mainButtonSearch.clickAndRun()
 
+                assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
 
-            mainButtonSearch
-            mainSongList
-
-            FakeContentProvider.hasPermissionToReadExternalStorage = false
-            mainButtonSearch.clickAndRun()
-
-            assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-
-            shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-            activity.onRequestPermissionsResult(
+                shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+                activity.onRequestPermissionsResult(
                     expectedRequestCode,
                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                     intArrayOf(PackageManager.PERMISSION_DENIED)
-            )
-            shadowLooper.idleFor(Duration.ofSeconds(3))
+                )
+                shadowLooper.idleFor(Duration.ofSeconds(3))
 
-            mainSongList.assertListItems(listOf<SongFake>()) { _, _, _ -> /*implicitSizeAssertion*/ }
+                mainSongList.assertListItems(listOf<SongFake>()) { _, _, _ -> /*implicitSizeAssertion*/ }
+            }
         }
     }
 
@@ -119,27 +97,26 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         setupContentProvider(fakeSongResult)
 
         testActivity {
+            PlayMusicScreen(this).apply {
 
-            mainButtonSearch
-            mainSongList
+                FakeContentProvider.hasPermissionToReadExternalStorage = false
+                mainButtonSearch.clickAndRun()
 
-            FakeContentProvider.hasPermissionToReadExternalStorage = false
-            mainButtonSearch.clickAndRun()
+                assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
 
-            assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-
-            shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-            activity.onRequestPermissionsResult(
+                shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+                activity.onRequestPermissionsResult(
                     expectedRequestCode,
                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                     intArrayOf(PackageManager.PERMISSION_DENIED)
-            )
-            shadowLooper.idleFor(Duration.ofSeconds(3))
+                )
+                shadowLooper.idleFor(Duration.ofSeconds(3))
 
-            assertLastToastMessageEquals(
+                assertLastToastMessageEquals(
                     errorMessage = "On permission denial a Toast with warning message",
                     expectedMessage = "Songs cannot be loaded without permission"
-            )
+                )
+            }
         }
     }
 
@@ -151,41 +128,40 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         CustomMediaPlayerShadow.setFakeSong(fakeSongResult.first())
 
         testActivity {
-            mainButtonSearch
-            mainSongList
+            PlayMusicScreen(this).apply {
 
-            FakeContentProvider.hasPermissionToReadExternalStorage = false
-            mainButtonSearch.clickAndRun()
+                FakeContentProvider.hasPermissionToReadExternalStorage = false
+                mainButtonSearch.clickAndRun()
 
-            assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
 
-            shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-            activity.onRequestPermissionsResult(
+                shadowActivity.denyPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+                activity.onRequestPermissionsResult(
                     expectedRequestCode,
                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                     intArrayOf(PackageManager.PERMISSION_DENIED)
-            )
-            shadowLooper.runToEndOfTasks()
+                )
+                shadowLooper.runToEndOfTasks()
 
-            mainSongList.assertListItems(listOf<SongFake>()) { _ , _ , _ -> /*implicitSizeAssertion*/ }
+                mainSongList.assertListItems(listOf<SongFake>()) { _, _, _ -> /*implicitSizeAssertion*/ }
 
-            FakeContentProvider.hasPermissionToReadExternalStorage = true
-            mainButtonSearch.clickAndRun()
-            assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
-            shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-            activity.onRequestPermissionsResult(
+                FakeContentProvider.hasPermissionToReadExternalStorage = true
+                mainButtonSearch.clickAndRun()
+                assertRequestPermissions(listOf(Manifest.permission.READ_EXTERNAL_STORAGE))
+                shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
+                activity.onRequestPermissionsResult(
                     expectedRequestCode,
                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                     intArrayOf(PackageManager.PERMISSION_GRANTED)
-            )
-            shadowLooper.runToEndOfTasks()
+                )
+                shadowLooper.runToEndOfTasks()
 
-            mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
-                assertSongItem(
+                mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
+                    assertSongItem(
                         "After permission is granted songs should be loaded into mainSongList. Song",
                         itemViewSupplier(), song
-                )
-
+                    )
+                }
             }
         }
     }
@@ -198,15 +174,14 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         CustomMediaPlayerShadow.setFakeSong(fakeSongResult.first())
 
         testActivity {
-            mainButtonSearch
-            mainSongList
-
-            mainButtonSearch.clickAndRun()
-            mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
-                assertSongItem(
+            PlayMusicScreen(this).apply {
+                mainButtonSearch.clickAndRun()
+                mainSongList.assertListItems(fakeSongResult) { itemViewSupplier, position, song ->
+                    assertSongItem(
                         "mainSongList content should be songs found on external storage. Song",
                         itemViewSupplier(), song
-                )
+                    )
+                }
             }
         }
     }
@@ -218,9 +193,9 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         setupContentProvider(fakeSongResult)
 
         testActivity {
-            mainButtonSearch
-            mainSongList
-            mainSongList.assertListItems(fakeSongResult) { _, _, _ -> /*implicitSizeAssertion*/ }
+            PlayMusicScreen(this).apply {
+                mainSongList.assertListItems(fakeSongResult) { _, _, _ -> /*implicitSizeAssertion*/ }
+            }
         }
     }
 

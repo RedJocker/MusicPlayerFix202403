@@ -6,7 +6,7 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.provider.MediaStore
-// version 1.3
+// version 2.0
 class FakeContentProvider : ContentProvider() {
 
     companion object {

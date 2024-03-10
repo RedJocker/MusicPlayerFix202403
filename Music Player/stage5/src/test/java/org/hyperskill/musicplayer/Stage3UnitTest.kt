@@ -3,18 +3,20 @@ package org.hyperskill.musicplayer
 import android.Manifest
 import android.os.Handler
 import android.os.SystemClock
-import android.widget.Button
-import android.widget.ImageButton
-import androidx.fragment.app.FragmentContainerView
-import androidx.recyclerview.widget.RecyclerView
+import org.hyperskill.musicplayer.internals.AddPlaylistScreen
+import org.hyperskill.musicplayer.internals.AddPlaylistScreen.Companion.ID_ADD_PLAYLIST_BTN_CANCEL
 import org.hyperskill.musicplayer.internals.CustomMediaPlayerShadow
 import org.hyperskill.musicplayer.internals.CustomShadowAsyncDifferConfig
 import org.hyperskill.musicplayer.internals.CustomShadowCountDownTimer
+import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.ID_MAIN_BUTTON_SEARCH
 import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.mainMenuItemIdAddPlaylist
 import org.hyperskill.musicplayer.internals.MusicPlayerBaseScreen.Companion.mainMenuItemIdLoadPlaylist
 import org.hyperskill.musicplayer.internals.MusicPlayerUnitTests
 import org.hyperskill.musicplayer.internals.PlayMusicScreen
-import org.hyperskill.musicplayer.internals.SongFake
+import org.hyperskill.musicplayer.internals.PlayMusicScreen.Companion.ID_CONTROLLER_BTN_PLAY_PAUSE
+import org.hyperskill.musicplayer.internals.PlayMusicScreen.Companion.ID_CONTROLLER_BTN_STOP
+import org.hyperskill.musicplayer.internals.PlayMusicScreen.Companion.ID_CONTROLLER_SEEKBAR
+import org.hyperskill.musicplayer.internals.PlayMusicScreen.Companion.ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -26,28 +28,11 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import java.time.Duration
 
-// version 1.4.1
+// version 2.0
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @Config(shadows = [CustomMediaPlayerShadow::class, CustomShadowCountDownTimer::class, CustomShadowAsyncDifferConfig::class])
 @RunWith(RobolectricTestRunner::class)
 class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.java) {
-
-
-    companion object {
-
-        const val mainMenuItemIdAddPlaylist = "mainMenuAddPlaylist"
-        const val mainMenuItemIdLoadPlaylist = "mainMenuLoadPlaylist"
-        const val mainMenuItemIdDeletePlaylist = "mainMenuDeletePlaylist"
-
-        val songFakeList = (1..10).map { idNum ->
-            SongFake(
-                id = idNum,
-                artist = "artist$idNum",
-                title = "title$idNum",
-                duration = 215_000
-            )
-        }
-    }
 
     @Before
     fun setUp() {
@@ -64,68 +49,62 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             if(isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch no MediaPlayer should be playing"
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH no MediaPlayer should be playing"
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
-
-            val controllerUi = mainFragmentContainer.getControllerViews()
             var playTime = 0
 
-            playTime += controllerUi.btnPlayPause.clickAndRun(1_200) // play
+            playTime += controllerBtnPlayPause.clickAndRun(1_200) // play
             val messagePlayerShouldStartPlay =
-                "After click on controllerBtnPlayPause right after mainButtonSearch " +
+                "After click on $ID_CONTROLLER_BTN_PLAY_PAUSE right after $ID_MAIN_BUTTON_SEARCH " +
                         "the default song item should start playing."
-            player.assertControllerPlay(messagePlayerShouldStartPlay, controllerUi, expectedPosition = playTime)
+            player.assertControllerPlay(messagePlayerShouldStartPlay, expectedPosition = playTime)
 
-            controllerUi.btnPlayPause.clickAndRun(20_000) // pause
+            controllerBtnPlayPause.clickAndRun(20_000) // pause
             val messagePlayingShouldPauseOnClick =
-                "After click on controllerBtnPlayPause on a playing song the mediaPlayer should pause."
-            player.assertControllerPause(messagePlayingShouldPauseOnClick, controllerUi, expectedPosition = playTime)
+                "After click on $ID_CONTROLLER_BTN_PLAY_PAUSE on a playing song the mediaPlayer should pause."
+            player.assertControllerPause(messagePlayingShouldPauseOnClick,  expectedPosition = playTime)
 
-            playTime += controllerUi.btnPlayPause.clickAndRun(10_100) // play
+            playTime += controllerBtnPlayPause.clickAndRun(10_100) // play
             val messagePlayingShouldResumeOnClick =
-                "After click on controllerBtnPlayPause on a paused song the mediaPlayer should resume playing."
-            player.assertControllerPlay(messagePlayingShouldResumeOnClick, controllerUi, expectedPosition = playTime)
+                "After click on $ID_CONTROLLER_BTN_PLAY_PAUSE on a paused song the mediaPlayer should resume playing."
+            player.assertControllerPlay(messagePlayingShouldResumeOnClick,  expectedPosition = playTime)
             assertEquals(messagePlayingShouldResumeOnClick, true, player.isPlaying)
 
-            controllerUi.btnStop.clickAndRun(10_000)  // stop
+            controllerBtnStop.clickAndRun(10_000)  // stop
             val messagePlayingShouldStopOnStopClick =
-                "After click on controllerBtnPlayStop the player should stop."
-            player.assertControllerStop(messagePlayingShouldStopOnStopClick, controllerUi)
+                "After click on $ID_CONTROLLER_BTN_STOP the player should stop."
+            player.assertControllerStop(messagePlayingShouldStopOnStopClick)
         }
+        Unit
     }
 
     @Test
     fun test01_checkImgButtonTriggersMediaPlayerOnListItem() = testActivity {
+        var playingTime = 0
+        val selectedItemIndex = 1
+
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-
             mainButtonSearch.clickAndRun()
-            val controllerUi = mainFragmentContainer.getControllerViews()
-
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch no MediaPlayer should be playing"
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH no MediaPlayer should be playing"
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
-            var playingTime = 0
 
-            val selectedItemIndex = 1
             CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedItemIndex])
             mainSongList.assertSingleListItem(selectedItemIndex) { itemViewSupplier ->
                 // invoking itemViewSupplier increase clock time
 
                 // state stopped
-                var songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause") //play
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier) //play
 
                 playingTime += songItemImgBtnPlayPause.clickAndRun(1_200)
                 // state playing
 
                 // refresh reference to songItemImgBtnPlayPause
                 val timeBefore1 = SystemClock.currentGnssTimeClock().millis()
-                songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                 val timeAfter1 = SystemClock.currentGnssTimeClock().millis()
 
                 playingTime += (timeAfter1 - timeBefore1).toInt()
@@ -134,216 +113,193 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                     "After click on songItemImgBtnPlayPause the song item should start playing."
                 player.assertControllerPlay(
                     messagePlayerShouldStartPlay,
-                    controllerUi,
                     expectedPosition = playingTime
                 )
 
                 songItemImgBtnPlayPause.clickAndRun(20_000)
                 // state paused
 
-                songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                 val messagePlayingShouldPauseOnClick =
-                    "After click on songItemImgBtnPlayPause on a playing song the mediaPlayer should pause."
+                    "After click on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a playing song the mediaPlayer should pause."
                 player.assertControllerPause(
-                    messagePlayingShouldPauseOnClick,
-                    controllerUi,
-                    expectedPosition = playingTime
+                    messagePlayingShouldPauseOnClick, expectedPosition = playingTime
                 )
 
                 playingTime += songItemImgBtnPlayPause.clickAndRun(10_100)
                 // state playing
 
                 val messagePlayingShouldResumeOnClick =
-                    "After click on songItemImgBtnPlayPause on a paused song the mediaPlayer should resume playing."
+                    "After click on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a paused song the mediaPlayer should resume playing."
                 player.assertControllerPlay(
                     messagePlayingShouldResumeOnClick,
-                    controllerUi,
                     expectedPosition = playingTime
                 )
 
-                controllerUi.btnStop.clickAndRun(10_000)
+                controllerBtnStop.clickAndRun(10_000)
                 // state stopped
 
                 val messagePlayingShouldStopOnStopClick =
-                    "After click on controllerBtnPlayStop the player should stop."
-                player.assertControllerStop(messagePlayingShouldStopOnStopClick, controllerUi)
+                    "After click on $ID_CONTROLLER_BTN_STOP the player should stop."
+                player.assertControllerStop(messagePlayingShouldStopOnStopClick)
             }
         }
+        Unit
     }
 
     @Test
     fun test02_checkSeekBarChangeWhilePlaying() = testActivity {
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing"
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing"
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val controllerUi = mainFragmentContainer.getControllerViews()
-
             var playingTime = 0
-            playingTime += controllerUi.btnPlayPause.clickAndRun(1_200)  // play
+            playingTime += controllerBtnPlayPause.clickAndRun(1_200)  // play
             val messagePlayerShouldStartPlay =
-                "After click on controllerBtnPlayPause right after mainButtonSearch the default song item should start playing."
+                "After click on $ID_CONTROLLER_BTN_PLAY_PAUSE right after " +
+                        "$ID_MAIN_BUTTON_SEARCH the default song item should start playing."
             player.assertControllerPlay(
                 messagePlayerShouldStartPlay,
-                controllerUi,
                 expectedPosition = playingTime
             )
 
-            controllerUi.seekBar.setProgressAsUser(100)  // seek with play
+            controllerSeekBar.setProgressAsUser(100)  // seek with play
             shadowLooper.idleFor(Duration.ofMillis(100))
             playingTime = 100_100
 
             val errorSeekBarChange =
-                "After changing controllerSeekBar progress as user on a playing song " +
+                "After changing $ID_CONTROLLER_SEEKBAR progress as user on a playing song " +
                         "the mediaPlayer should update its currentPosition and remain playing."
             player.assertControllerPlay(
                 errorSeekBarChange,
-                controllerUi,
                 expectedPosition = playingTime
             )
 
-            controllerUi.btnPlayPause.clickAndRun()  // pause
+            controllerBtnPlayPause.clickAndRun()  // pause
             val messagePauseAfterSeekBarChange =
-                "It should be possible to pause a song after changing controllerSeekBar."
+                "It should be possible to pause a song after changing $ID_CONTROLLER_SEEKBAR."
             player.assertControllerPause(
-                messagePauseAfterSeekBarChange, controllerUi, expectedPosition = playingTime
+                messagePauseAfterSeekBarChange,  expectedPosition = playingTime
             )
         }
+        Unit
     }
 
     @Test
     fun test03_checkSeekBarBeforePlaying() = testActivity {
+        var playingTime = 0
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing."
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val controllerUi = mainFragmentContainer.getControllerViews()
-            var playingTime = 0
-
-            controllerUi.seekBar.setProgressAsUser(100) // seek with stop
+            controllerSeekBar.setProgressAsUser(100) // seek with stop
             shadowLooper.idleFor(Duration.ofMillis(100))
             playingTime = 100_000
 
             val messageSeekBarChangeBeforePlaying =
-                "After changing controllerSeekBar progress as user before playing a song " +
+                "After changing $ID_CONTROLLER_SEEKBAR progress as user before playing a song " +
                         "the mediaPlayer should update its currentPosition and remain paused."
             player.assertControllerPause(
-                messageSeekBarChangeBeforePlaying, controllerUi, expectedPosition = playingTime
+                messageSeekBarChangeBeforePlaying,  expectedPosition = playingTime
             )
 
-            playingTime += controllerUi.btnPlayPause.clickAndRun(10_400) // play
+            playingTime += controllerBtnPlayPause.clickAndRun(10_400) // play
 
             val messagePlayAfterSeekBarChangeBeforePlaying =
                 "It should be possible to play a song after " +
-                        "changing controllerSeekBar progress as user before playing a song."
+                        "changing $ID_CONTROLLER_SEEKBAR progress as user before playing a song."
             player.assertControllerPlay(
                 messagePlayAfterSeekBarChangeBeforePlaying,
-                controllerUi,
                 expectedPosition = playingTime
             )
         }
+        Unit
     }
 
     @Test
     fun test04_checkSeekBarAfterStop() = testActivity {
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing."
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val controllerUi = mainFragmentContainer.getControllerViews()
+            controllerBtnPlayPause.clickAndRun(10_000) // play
+            controllerBtnStop.clickAndRun() // stop
 
-            controllerUi.btnPlayPause.clickAndRun(10_000) // play
-            controllerUi.btnStop.clickAndRun() // stop
-
-            controllerUi.seekBar.setProgressAsUser(100) // seek with stop
+            controllerSeekBar.setProgressAsUser(100) // seek with stop
             shadowLooper.idleFor(Duration.ofMillis(1_000))
 
             val messageSeekBarChangeAfterStop =
-                "After changing controllerSeekBar progress as user with a stopped song " +
+                "After changing $ID_CONTROLLER_SEEKBAR progress as user with a stopped song " +
                         "the mediaPlayer should update its currentPosition and remain paused."
             player.assertControllerPause(
-                messageSeekBarChangeAfterStop, controllerUi, expectedPosition = 100_000
+                messageSeekBarChangeAfterStop,  expectedPosition = 100_000
             )
         }
+        Unit
     }
 
     @Test
     fun test05_checkSeekBarAfterPause() = testActivity {
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing."
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val controllerUi = mainFragmentContainer.getControllerViews()
+            controllerBtnPlayPause.clickAndRun(10_000) // play
+            controllerBtnPlayPause.clickAndRun()  // pause
 
-            controllerUi.btnPlayPause.clickAndRun(10_000) // play
-            controllerUi.btnPlayPause.clickAndRun()  // pause
-
-            controllerUi.seekBar.setProgressAsUser(50) // seek with pause
+            controllerSeekBar.setProgressAsUser(50) // seek with pause
             shadowLooper.idleFor(Duration.ofMillis(1_000))
 
             val messageSeekBarChangeAfterPause =
-                "After changing controllerSeekBar progress as user with a paused song " +
+                "After changing $ID_CONTROLLER_SEEKBAR progress as user with a paused song " +
                         "the mediaPlayer should update its currentPosition and remain paused."
             player.assertControllerPause(
-                messageSeekBarChangeAfterPause, controllerUi, expectedPosition = 50_000
+                messageSeekBarChangeAfterPause,  expectedPosition = 50_000
             )
         }
+        Unit
     }
 
     @Test
     fun test06_checkMusicEnd() = testActivity {
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing."
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val controllerUi = mainFragmentContainer.getControllerViews()
-
-            controllerUi.seekBar.setProgressAsUser(210) // seek with stop
-            controllerUi.btnPlayPause.clickAndRun(10_000)  // play until end
+            controllerSeekBar.setProgressAsUser(210) // seek with stop
+            controllerBtnPlayPause.clickAndRun(10_000)  // play until end
 
             val messageSeekBarChangeAfterStop = "When a song ends the player should stop playing."
-            player.assertControllerStop(messageSeekBarChangeAfterStop, controllerUi)
+            player.assertControllerStop(messageSeekBarChangeAfterStop)
 
             mainSongList.assertSingleListItem(0) { itemViewSupplier ->
-                val songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                val songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                 songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
                     "When the song is finished the image should change to R.drawable.ic_play.",
@@ -351,204 +307,171 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 )
             }
         }
+        Unit
     }
 
     @Test
     fun test07_checkSeekBarChangeAfterMusicEnd() = testActivity {
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing."
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val controllerUi = mainFragmentContainer.getControllerViews()
-
-            controllerUi.seekBar.setProgressAsUser(210)  // seek with stop
-            controllerUi.btnPlayPause.clickAndRun(10_400)  // play until end
+            controllerSeekBar.setProgressAsUser(210)  // seek with stop
+            controllerBtnPlayPause.clickAndRun(10_400)  // play until end
 
             val messageSeekBarChangeAfterStop =
                 "When a song ends the player should stop playing."
-            player.assertControllerStop(messageSeekBarChangeAfterStop, controllerUi)
+            player.assertControllerStop(messageSeekBarChangeAfterStop)
 
-            controllerUi.seekBar.setProgressAsUser(200) // seek with stop
+            controllerSeekBar.setProgressAsUser(200) // seek with stop
             var playingTime = 200_000
-            playingTime += controllerUi.btnPlayPause.clickAndRun(10_400) // play
+            playingTime += controllerBtnPlayPause.clickAndRun(10_400) // play
             val messagePlayAfterSeekBarChangeAfterMusicEnd =
-                "It should be possible to change controllerSeekBar progress as user " +
+                "It should be possible to change $ID_CONTROLLER_SEEKBAR progress as user " +
                         "after a music ends and resume playing the song."
             player.assertControllerPlay(
                 messagePlayAfterSeekBarChangeAfterMusicEnd,
-                controllerUi,
                 expectedPosition = playingTime
             )
         }
+        Unit
     }
 
     @Test
     fun test08_checkPlayAfterMusicEnd() = testActivity {
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing."
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val controllerUi = mainFragmentContainer.getControllerViews()
-
-            controllerUi.seekBar.setProgressAsUser(210) // seek with stop
-            controllerUi.btnPlayPause.clickAndRun(10_000) // play until end
+            controllerSeekBar.setProgressAsUser(210) // seek with stop
+            controllerBtnPlayPause.clickAndRun(10_000) // play until end
 
             val messageSeekBarChangeAfterStop =
                 "When a song ends the player should stop playing."
-            player.assertControllerStop(messageSeekBarChangeAfterStop, controllerUi)
+            player.assertControllerStop(messageSeekBarChangeAfterStop)
 
-            val playingTime = controllerUi.btnPlayPause.clickAndRun(10_400) // play
+            val playingTime = controllerBtnPlayPause.clickAndRun(10_400) // play
             val messagePlayAfterSeekBarChangeAfterMusicEnd =
                 "It should be possible to play again a song after song end."
             player.assertControllerPlay(
                 messagePlayAfterSeekBarChangeAfterMusicEnd,
-                controllerUi,
                 expectedPosition = playingTime
             )
         }
+        Unit
     }
 
     @Test
     fun test09_checkImgButtonPlayAfterMusicEnd() = testActivity {
+        val selectedItemIndex = 2
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-            mainSongList
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing."
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val selectedItemIndex = 2
             CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedItemIndex])
             mainSongList.assertSingleListItem(selectedItemIndex) { itemViewSupplier ->
-                var songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
-                val controllerUi = mainFragmentContainer.getControllerViews()
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                 songItemImgBtnPlayPause.clickAndRun() // play
-                controllerUi.seekBar.setProgressAsUser(210)  // seek with play
+                controllerSeekBar.setProgressAsUser(210)  // seek with play
                 shadowLooper.idleFor(Duration.ofMillis(20_000)) // play until end
 
                 val messageSeekBarChangeAfterStop =
                     "When a song ends the player should stop playing."
-                player.assertControllerStop(messageSeekBarChangeAfterStop, controllerUi)
+                player.assertControllerStop(messageSeekBarChangeAfterStop)
 
-                songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                 val playingTime = songItemImgBtnPlayPause.clickAndRun(10_400)  // play
                 val messagePlayAfterSeekBarChangeAfterMusicEnd =
                     "It should be possible to play again a song after song end."
                 player.assertControllerPlay(
                     messagePlayAfterSeekBarChangeAfterMusicEnd,
-                    controllerUi,
                     expectedPosition = playingTime
                 )
             }
         }
+        Unit
     }
 
 
     @Test
     fun test10_checkSongChange() = testActivity {
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-            mainSongList
-
             mainButtonSearch.clickAndRun()
 
             if (isPlayerNull().not()) {
                 val messagePlayerPlayingOnSearchClick =
-                    "After initial click on mainButtonSearch MediaPlayer should not be playing."
+                    "After initial click on $ID_MAIN_BUTTON_SEARCH MediaPlayer should not be playing."
                 assertEquals(messagePlayerPlayingOnSearchClick, false, player.isPlaying)
             }
 
-            val controllerUi = mainFragmentContainer.getControllerViews()
-
-            CustomMediaPlayerShadow.wasResetOrRecreated =
-                true  // consider first as already created
+            CustomMediaPlayerShadow.wasResetOrRecreated = true  // consider first as already created
             mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
                 CustomMediaPlayerShadow.setFakeSong(song)
-                val songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                val songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                 val playingTime = songItemImgBtnPlayPause.clickAndRun(2_200)  // play
 
                 val messageSongChange =
-                    "After click on songItemImgBtnPlayPause on a different songItem the current song should change."
+                    "After click on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE on a different songItem the current song should change."
                 assertTrue(messageSongChange, CustomMediaPlayerShadow.wasResetOrRecreated)
 
                 val messagePlaySongItem =
-                    "After first click on songItemImgBtnPlayPause that song should play."
+                    "After first click on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE that song should play."
                 player.assertControllerPlay(
                     messagePlaySongItem,
-                    controllerUi,
                     expectedPosition = playingTime
                 )
 
-                controllerUi.btnPlayPause.clickAndRun()  // pause
+                controllerBtnPlayPause.clickAndRun()  // pause
 
                 val messagePauseSongItem =
-                    "After click on controllerBtnPlayPause with a playing song that song should be paused."
-                player.assertControllerPause(
-                    messagePauseSongItem,
-                    controllerUi,
-                    expectedPosition = playingTime
-                )
+                    "After click on $ID_CONTROLLER_BTN_PLAY_PAUSE " +
+                            "with a playing song that song should be paused."
+                player.assertControllerPause(messagePauseSongItem, expectedPosition = playingTime)
 
-                controllerUi.btnStop.clickAndRun()  // stop
+                controllerBtnStop.clickAndRun()  // stop
 
                 val messageStopSongItem =
-                    "After click on controllerBtnStop the song should be stopped"
-                player.assertControllerStop(messageStopSongItem, controllerUi)
+                    "After click on $ID_CONTROLLER_BTN_STOP the song should be stopped"
+                player.assertControllerStop(messageStopSongItem)
 
                 CustomMediaPlayerShadow.wasResetOrRecreated = false
             }
         }
+        Unit
     }
 
     @Test
     fun test11_checkCancelAddPlaylistKeepsPlayingCurrentSelectedSong() = testActivity {
+        var playingTime = 0
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
+
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-            mainSongList
-
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
-
             mainButtonSearch.clickAndRun()
-
-            var playingTime = 0
-
             CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedSongZeroIndex])
             mainSongList.assertSingleListItem(selectedSongZeroIndex) { itemViewSupplier ->
 
-                val songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
-                val controllerUi = mainFragmentContainer.getControllerViews()
-
-
+                val songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                 playingTime += songItemImgBtnPlayPause.clickAndRun(3200) // play
 
                 player.assertControllerPlay(
-                    "A song should start playing after click on songItemImgBtnPlayPause",
-                    controllerUi,
+                    "A song should start playing after click on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE",
                     expectedPosition = playingTime
                 )
             }
@@ -557,11 +480,11 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 mainMenuItemIdAddPlaylist,
                 millis = 1_000
             )
-
-            playingTime += mainFragmentContainer
-                .findViewByString<Button>("addPlaylistBtnCancel")
-                .clickAndRun(1_000)
-
+        }
+        AddPlaylistScreen(this).apply {
+            playingTime += addPlaylistBtnCancel.clickAndRun(1_000)
+        }
+        PlayMusicScreen(this).apply {
             // give time to controller components to update values
             shadowLooper.idleFor(Duration.ofMillis(1_100))
             playingTime += 1_100
@@ -572,40 +495,39 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 // invoking itemViewSupplier might increase clock
 
                 val timeBefore = SystemClock.currentGnssTimeClock().millis()
-                var songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                 val timeAfter = SystemClock.currentGnssTimeClock().millis()
                 playingTime += elapsedTime + (timeAfter - timeBefore).toInt()
 
                 if (item.id == selectedSongZeroIndex + 1) {
-                    val controllerUi = mainFragmentContainer.getControllerViews()
+
 
                     playingTime += adjustPlayerPositionToAvoidSyncIssues()
 
                     player.assertControllerPlay(
-                        "A song should remain playing after list load if present on the loaded list.",
-                        controllerUi, expectedPosition = playingTime
+                        "A song should remain playing " +
+                                "after list load if present on the loaded list.",
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnPlayPause.clickAndRun(2_000)  // pause
+                    controllerBtnPlayPause.clickAndRun(2_000)  // pause
                     player.assertControllerPause(
-                        "A selected song item should remain responding to controllerBtnPlayPause after list loaded.",
-                        controllerUi, expectedPosition = playingTime
+                        "A selected song item should remain " +
+                                "responding to $ID_CONTROLLER_BTN_PLAY_PAUSE after list loaded.",
+                        expectedPosition = playingTime
                     )
-                    songItemImgBtnPlayPause =
-                        itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     playingTime += songItemImgBtnPlayPause.clickAndRun(1_200) // play
                     player.assertControllerPlay(
-                        "The selected song should remain responding to songItemImgBtnPlayPause clicks after adding a playlist",
-                        controllerUi, expectedPosition = playingTime
+                        "The selected song should remain " +
+                                "responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist",
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnStop.clickAndRun() // stop
+                    controllerBtnStop.clickAndRun() // stop
                     player.assertControllerStop(
-                        "The selected song should remain responding to controllerBtnStop clicks after adding a playlist",
-                        controllerUi
+                        "The selected song should remain responding to $ID_CONTROLLER_BTN_STOP clicks after adding a playlist"
                     )
-
                 } else {
                     songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
                         "A unselected song should remain unselected after loading a playlist",
@@ -615,30 +537,27 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             }
             //
         }
+        Unit
     }
 
     @Test
     fun test12_checkLoadPlaylistKeepsPlayingCurrentSelectedSong() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
+        var playingTime = 0
+        val playlistName = "My Playlist"
+
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-            mainSongList
-
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val selectedSongZeroIndex = testedItemsZeroBasedIndexes[1]
-
             mainButtonSearch.clickAndRun()
 
-            var playingTime = 0
             CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedSongZeroIndex])
             mainSongList.assertSingleListItem(selectedSongZeroIndex) { itemViewSupplier ->
-                val songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
-                val controllerUi = mainFragmentContainer.getControllerViews()
+                val songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
+
                 playingTime += songItemImgBtnPlayPause.clickAndRun(3200)   // play
 
                 player.assertControllerPlay(
-                    "A song should start playing after click on songItemImgBtnPlayPause",
-                    controllerUi,
+                    "A song should start playing after click on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE",
                     expectedPosition = playingTime
                 )
             }
@@ -647,8 +566,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 mainMenuItemIdAddPlaylist,
                 millis = 3_000
             )
-
-            val playlistName = "My Playlist"
+        }
+        AddPlaylistScreen(this).apply {
 
             playingTime += addPlaylist(
                 playlistName = playlistName,
@@ -656,7 +575,8 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 songListView = mainSongList,
                 fragmentContainer = mainFragmentContainer
             )
-
+        }
+        PlayMusicScreen(this).apply {
             // give time to controller components to update values
             shadowLooper.idleFor(Duration.ofMillis(1_100))
             playingTime += 1_100
@@ -667,47 +587,45 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 playingTime += elapsedTime
 
                 val timeBefore = SystemClock.currentGnssTimeClock().millis()
-                var songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                 val timeAfter = SystemClock.currentGnssTimeClock().millis()
                 playingTime += (timeAfter - timeBefore).toInt()
 
                 if (item.id == selectedSongZeroIndex + 1) {
-                    val controllerUi = mainFragmentContainer.getControllerViews()
+
 
                     playingTime += adjustPlayerPositionToAvoidSyncIssues()
 
                     player.assertControllerPlay(
                         "A song should remain playing after list load if present on the loaded list.",
-                        controllerUi, expectedPosition = playingTime
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnPlayPause.clickAndRun(2_000) // pause
+                    controllerBtnPlayPause.clickAndRun(2_000) // pause
                     player.assertControllerPause(
-                        "A selected song item should remain responding to controllerBtnPlayPause after list loaded.",
-                        controllerUi, expectedPosition = playingTime
+                        "A selected song item should remain " +
+                                "responding to $ID_CONTROLLER_BTN_PLAY_PAUSE after list loaded.",
+                        expectedPosition = playingTime
                     )
 
-                    songItemImgBtnPlayPause =
-                        itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     playingTime += songItemImgBtnPlayPause.clickAndRun(1_200)  // play
                     player.assertControllerPlay(
-                        "The selected song should remain responding to songItemImgBtnPlayPause clicks after adding a playlist",
-                        controllerUi, expectedPosition = playingTime
+                        "The selected song should remain responding " +
+                                "to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist",
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnStop.clickAndRun()  // stop
+                    controllerBtnStop.clickAndRun()  // stop
                     player.assertControllerStop(
-                        "The selected song should remain responding to controllerBtnStop clicks after adding a playlist",
-                        controllerUi
+                        "The selected song should remain responding to $ID_CONTROLLER_BTN_STOP clicks after adding a playlist"
                     )
 
-                    songItemImgBtnPlayPause =
-                        itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     playingTime = songItemImgBtnPlayPause.clickAndRun(1_200)  // play
                     player.assertControllerPlay(
-                        "The selected song should remain responding to songItemImgBtnPlayPause clicks after adding a playlist",
-                        controllerUi, expectedPosition = playingTime
+                        "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist",
+                        expectedPosition = playingTime
                     )
 
                 } else {
@@ -718,7 +636,6 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 }
             }
             //
-
 
             playingTime += loadPlaylist(
                 menuItemIdLoadPlaylist = mainMenuItemIdLoadPlaylist,
@@ -738,46 +655,45 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 playingTime += elapsedTime
 
                 val timeBefore = SystemClock.currentGnssTimeClock().millis()
-                var songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                 val timeAfter = SystemClock.currentGnssTimeClock().millis()
                 playingTime += (timeAfter - timeBefore).toInt()
 
                 if (item.id == selectedSongZeroIndex + 1) {
-                    val controllerUi = mainFragmentContainer.getControllerViews()
+
                     playingTime += adjustPlayerPositionToAvoidSyncIssues()
 
                     player.assertControllerPlay(
                         "A song should remain playing after list load if present on the loaded list.",
-                        controllerUi, expectedPosition = playingTime
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnPlayPause.clickAndRun(2_000)  // pause
+                    controllerBtnPlayPause.clickAndRun(2_000)  // pause
                     player.assertControllerPause(
-                        "A selected song item should remain responding to controllerBtnPlayPause after playlist loaded.",
-                        controllerUi, expectedPosition = playingTime
+                        "A selected song item should remain responding " +
+                                "to $ID_CONTROLLER_BTN_PLAY_PAUSE after playlist loaded.",
+                        expectedPosition = playingTime
                     )
 
-                    songItemImgBtnPlayPause =
-                        itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     playingTime += songItemImgBtnPlayPause.clickAndRun(1_200)  // play
                     player.assertControllerPlay(
-                        "The selected song should remain responding to songItemImgBtnPlayPause clicks after playlist loaded.",
-                        controllerUi, expectedPosition = playingTime
+                        "The selected song should remain responding to " +
+                                "$ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after playlist loaded.",
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnStop.clickAndRun()  // stop
+                    controllerBtnStop.clickAndRun()  // stop
                     player.assertControllerStop(
-                        "The selected song should remain responding to controllerBtnStop clicks after playlist loaded.",
-                        controllerUi
+                        "The selected song should remain responding to $ID_CONTROLLER_BTN_STOP " +
+                                "clicks after playlist loaded."
                     )
 
-                    songItemImgBtnPlayPause =
-                        itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     playingTime = songItemImgBtnPlayPause.clickAndRun(1_200)  // play
                     player.assertControllerPlay(
-                        "The selected song should remain responding to songItemImgBtnPlayPause clicks after playlist loaded.",
-                        controllerUi, expectedPosition = playingTime
+                        "The selected song should remain responding to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after playlist loaded.",
+                        expectedPosition = playingTime
                     )
 
                 } else {
@@ -789,35 +705,31 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             }
             //
         }
+        Unit
     }
 
     @Test
     fun test13_checkLoadPlaylistChangesSongIfCurrentSelectedSongNotInPlaylist() = testActivity {
+        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val selectedSongZeroIndex = 8
+        val playlistName = "Yes Playlist"
+        var playingTime = 0
+
         PlayMusicScreen(this).apply {
-            mainButtonSearch
-            mainSongList
-
-            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-            val selectedSongZeroIndex = 8
-
             mainButtonSearch.clickAndRun()
 
-            var playingTime = 0
             CustomMediaPlayerShadow.setFakeSong(songFakeList[selectedSongZeroIndex])
             mainSongList.assertSingleListItem(selectedSongZeroIndex) { itemViewSupplier ->
                 // invoking itemViewSupplier increase clock
 
                 // state stopped
-                val songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
-                val controllerUi = mainFragmentContainer.getControllerViews()
+                val songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                 playingTime += songItemImgBtnPlayPause.clickAndRun(3200)
                 // state playing
 
                 player.assertControllerPlay(
-                    "A song should start playing after click on songItemImgBtnPlayPause.",
-                    controllerUi,
+                    "A song should start playing after click on $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE.",
                     expectedPosition = playingTime
                 )
             }
@@ -826,16 +738,16 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 mainMenuItemIdAddPlaylist,
                 millis = 3_000
             )
-
-            val playlistName = "Yes Playlist"
-
+        }
+        AddPlaylistScreen(this).apply {
             playingTime += addPlaylist(
                 playlistName = playlistName,
                 selectedItemsIndex = testedItemsZeroBasedIndexes,
                 songListView = mainSongList,
                 fragmentContainer = mainFragmentContainer
             )
-
+        }
+        PlayMusicScreen(this).apply {
             // give time to controller components to update values
             shadowLooper.idleFor(Duration.ofMillis(1_100))
             playingTime += 1_100
@@ -846,45 +758,45 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 playingTime += elapsedTime
 
                 val timeBefore = SystemClock.currentGnssTimeClock().millis()
-                var songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                 val timeAfter = SystemClock.currentGnssTimeClock().millis()
                 playingTime += (timeAfter - timeBefore).toInt()
 
                 if (item.id == selectedSongZeroIndex + 1) {
-                    val controllerUi = mainFragmentContainer.getControllerViews()
+
                     playingTime += adjustPlayerPositionToAvoidSyncIssues()
 
                     player.assertControllerPlay(
                         "A song should remain playing after adding playlist.",
-                        controllerUi, expectedPosition = playingTime
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnPlayPause.clickAndRun(2_000)  // pause
+                    controllerBtnPlayPause.clickAndRun(2_000)  // pause
                     player.assertControllerPause(
-                        "A selected song item should remain responding to controllerBtnPlayPause after playlist added.",
-                        controllerUi, expectedPosition = playingTime
+                        "A selected song item should remain responding " +
+                                "to $ID_CONTROLLER_BTN_PLAY_PAUSE after playlist added.",
+                        expectedPosition = playingTime
                     )
-                    songItemImgBtnPlayPause =
-                        itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     playingTime += songItemImgBtnPlayPause.clickAndRun(1_200)  // play
                     player.assertControllerPlay(
-                        "The selected song should remain responding to songItemImgBtnPlayPause clicks after adding a playlist.",
-                        controllerUi, expectedPosition = playingTime
+                        "The selected song should remain responding " +
+                                "to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist.",
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnStop.clickAndRun()  // stop
+                    controllerBtnStop.clickAndRun()  // stop
                     player.assertControllerStop(
-                        "The selected song should remain responding to controllerBtnStop clicks after adding a playlist.",
-                        controllerUi
+                        "The selected song should remain responding " +
+                                "to $ID_CONTROLLER_BTN_STOP clicks after adding a playlist."
                     )
 
-                    songItemImgBtnPlayPause =
-                        itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     playingTime = songItemImgBtnPlayPause.clickAndRun(3_100)  // play
                     player.assertControllerPlay(
-                        "The selected song should remain responding to songItemImgBtnPlayPause clicks after adding a playlist.",
-                        controllerUi, expectedPosition = playingTime
+                        "The selected song should remain responding " +
+                                "to $ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after adding a playlist.",
+                        expectedPosition = playingTime
                     )
 
                 } else {
@@ -912,48 +824,43 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             mainSongList.assertListItems(
                 testedItemsZeroBasedIndexes.map { songFakeList[it] }) { itemViewSupplier, position, item, elapsedTime ->
 
-                var songItemImgBtnPlayPause =
-                    itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                 if (position == 0) {
-                    val controllerUi = mainFragmentContainer.getControllerViews()
 
-                    controllerUi.assertControllerState(
+
+                    assertControllerState(
                         "After loading a playlist without the current selected song" +
                                 " the first item of the loaded list should be selected.",
                         item, 0
                     )
 
-                    playingTime = controllerUi.btnPlayPause.clickAndRun(1_100)  // play
+                    playingTime = controllerBtnPlayPause.clickAndRun(1_100)  // play
 
                     player.assertControllerPlay(
                         "If the selected song is not present in the playlist loaded " +
                                 "the first item of the list should be selected and " +
-                                "react to clicks on controllerBtnPlayPause",
-                        controllerUi, expectedPosition = playingTime
+                                "react to clicks on $ID_CONTROLLER_BTN_PLAY_PAUSE",
+                        expectedPosition = playingTime
                     )
 
                     val timeBefore = SystemClock.currentGnssTimeClock().millis()
-                    songItemImgBtnPlayPause =
-                        itemViewSupplier().findViewByString<ImageButton>("songItemImgBtnPlayPause")
+                    songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
                     val timeAfter = SystemClock.currentGnssTimeClock().millis()
                     playingTime += (timeAfter - timeBefore).toInt()
 
                     songItemImgBtnPlayPause.clickAndRun(2_000)  // pause
                     player.assertControllerPause(
                         "The selected song item should respond to " +
-                                "songItemImgBtnPlayPause clicks after playlist loaded.",
-                        controllerUi, expectedPosition = playingTime
+                                "$ID_SONG_ITEM_IMG_BTN_PLAY_PAUSE clicks after playlist loaded.",
+                        expectedPosition = playingTime
                     )
 
-                    controllerUi.btnStop.clickAndRun()  // stop
+                    controllerBtnStop.clickAndRun()  // stop
                     player.assertControllerStop(
                         "The selected song should remain responding to" +
-                                " controllerBtnStop clicks after playlist loaded",
-                        controllerUi
+                                " $ID_CONTROLLER_BTN_STOP clicks after playlist loaded"
                     )
-
-
                 } else {
                     songItemImgBtnPlayPause.drawable.assertCreatedFromResourceId(
                         "A unselected song should remain unselected after loading a playlist",
@@ -963,45 +870,44 @@ class Stage3UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             }
             //
         }
+        Unit
     }
 
     @Test
     fun test14_checkControllerKeepsStateAfterCancelAddPlaylist() = testActivity {
+        var playingTime = 0
+
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
-            var playingTime = 0
 
             mainFragmentContainer.also {
-                val controllerUi = it.getControllerViews()
-
-                controllerUi.seekBar.setProgressAsUser(100)  // seek with stop
+                controllerSeekBar.setProgressAsUser(100)  // seek with stop
                 playingTime = 100_000
-                playingTime += controllerUi.btnPlayPause.clickAndRun(1_100) // play
+                playingTime += controllerBtnPlayPause.clickAndRun(1_100) // play
 
                 val messageWrongStateAfterPlay =
-                    "Wrong state of controller view after click on controllerBtnPlayPause after controllerSeekBar change."
-                controllerUi.assertControllerState(
+                    "Wrong state of controller view after click on $ID_CONTROLLER_BTN_PLAY_PAUSE " +
+                            "after $ID_CONTROLLER_SEEKBAR change."
+                assertControllerState(
                     messageWrongStateAfterPlay, songFakeList[0], playingTime
                 )
             }
 
             playingTime += activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist, 3_000)
-
-            playingTime += mainFragmentContainer
-                .findViewByString<Button>("addPlaylistBtnCancel")
-                .clickAndRun(1_000)
-
+        }
+        AddPlaylistScreen(this).apply {
+            playingTime += addPlaylistBtnCancel.clickAndRun(1_000)
+        }
+        PlayMusicScreen(this).apply {
             mainFragmentContainer.also {
-                val controllerUi = it.getControllerViews()
-
                 playingTime += adjustPlayerPositionToAvoidSyncIssues()
-
                 val messageWrongStateAfterPlay =
-                    "Wrong state of controller view after click on addPlaylistBtnCancel"
-                controllerUi.assertControllerState(
+                    "Wrong state of controller view after click on $ID_ADD_PLAYLIST_BTN_CANCEL"
+                assertControllerState(
                     messageWrongStateAfterPlay, songFakeList[0], playingTime
                 )
             }
         }
+        Unit
     }
 }

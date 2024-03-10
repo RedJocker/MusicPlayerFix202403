@@ -8,6 +8,7 @@ import android.widget.TextView
 import org.hyperskill.musicplayer.MainActivity
 import org.junit.Assert.assertEquals
 
+// version 2.0
 class AddPlaylistScreen(
     private val test: MusicPlayerUnitTests<MainActivity>,
 ) : MusicPlayerBaseScreen(test) {
@@ -27,7 +28,7 @@ class AddPlaylistScreen(
                 .findViewByString<Button>(ID_ADD_PLAYLIST_BTN_OK)
                 .also { addPlaylistBtnOk ->
                     assertEquals(
-                        "Wrong text for addPlaylistBtnOk",
+                        "Wrong text for $ID_ADD_PLAYLIST_BTN_OK",
                         "ok",
                         addPlaylistBtnOk.text.toString().lowercase()
                     )
@@ -40,7 +41,7 @@ class AddPlaylistScreen(
                 .findViewByString<EditText>(ID_ADD_PLAYLIST_ET_PLAYLIST_NAME)
                 .also { addPlaylistEtPlaylistName ->
                     assertEquals(
-                        "Wrong hint for addPlaylistEtPlaylistName",
+                        "Wrong hint for $ID_ADD_PLAYLIST_ET_PLAYLIST_NAME",
                         "playlist name",
                         addPlaylistEtPlaylistName.hint.toString().lowercase()
                     )

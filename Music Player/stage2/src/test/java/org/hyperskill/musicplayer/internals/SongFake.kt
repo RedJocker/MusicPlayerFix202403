@@ -1,5 +1,5 @@
 package org.hyperskill.musicplayer.internals
-// version 1.3
+// version 2.0
 data class SongFake(
     val id: Int,
     val artist: String,
