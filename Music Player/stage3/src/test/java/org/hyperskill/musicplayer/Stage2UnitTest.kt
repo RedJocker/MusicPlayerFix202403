@@ -432,10 +432,11 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
         }
         AddPlaylistScreen(this).apply {
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+            val caseDescription = "On addPlaylist after clicking $mainMenuItemIdAddPlaylist"
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, song ->
                 SongSelectorItemBindings(itemViewSupplier).apply {
                     assertSongSelectorInfo(
-                        "On addPlaylist after clicking $mainMenuItemIdAddPlaylist",
+                        caseDescription,
                         song
                     )
                     assertEquals(
@@ -546,11 +547,11 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             )
 
             val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
-
-            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, song ->
+            val caseDescription = "On PLAY_MUSIC state after playlist $playlistName is loaded."
+            mainSongList.assertListItems(playlistSongFake, caseDescription) { itemViewSupplier, _, song ->
 
                 assertSongItem(
-                    "Wrong list item after playlist loaded",
+                    "$caseDescription Wrong list item.",
                     itemViewSupplier(),
                     song
                 )
@@ -618,7 +619,8 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
         AddPlaylistScreen(this).apply {
             // check long click item is checked and deselect item
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+            val caseDescription = "After long click on item with index $longClickItemZeroBasedIndex"
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, item ->
                 when (item.id) {
                     longClickItemOneBasedIndex -> {
                         SongSelectorItemBindings(itemViewSupplier).apply {
@@ -656,10 +658,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             )
 
             val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
-
-            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, song ->
+            val caseDescription = "On PLAY_MUSIC state after playlist $playlistName is loaded."
+            mainSongList.assertListItems(playlistSongFake, caseDescription) { itemViewSupplier, _, song ->
                 assertSongItem(
-                    "Wrong list item after playlist loaded",
+                    "$caseDescription Wrong list item.",
                     itemViewSupplier(),
                     song
                 )
@@ -744,7 +746,8 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         PlayMusicScreen(this).apply {
 
             // check item keeps selected state after list add
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+            val caseDescription = "On PLAY_MUSIC state after adding a playlist with name $playlistName"
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, item ->
                 var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                 if (item.id == selectedSongZeroIndex + 1) {
@@ -797,8 +800,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             )
 
             // check item keeps selected state after list load
+            val caseDescription2 = "On PLAY_MUSIC state after playlist $playlistName is loaded."
             mainSongList.assertListItems(
-                testedItemsZeroBasedIndexes.map { songFakeList[it] }) { itemViewSupplier, _, item ->
+                testedItemsZeroBasedIndexes.map { songFakeList[it] }, caseDescription2
+            ) { itemViewSupplier, _, item ->
                 var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                 if (item.id == selectedSongZeroIndex + 1) {
@@ -851,7 +856,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     fun test14_checkLoadPlaylistOnPlayMusicStateWithoutCurrentTrackChangesCurrentTrack() {
 
         testActivity {
-            val playlistName = "My Playlist"
+            val playlistName = "muZics"
             val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
             val selectedSongZeroIndex = 8
 
@@ -880,8 +885,9 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 )
             }
             PlayMusicScreen(this).apply {
+                val caseDescription = "On PLAY_MUSIC state after adding a playlist with name $playlistName"
                 // check item keeps selected state after list add
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+                mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, item ->
                     var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                     if (item.id == selectedSongZeroIndex + 1) {
@@ -935,8 +941,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 )
 
                 // check default item selected after list load
+                val caseDescription2 = "On PLAY_MUSIC state after playlist $playlistName is loaded."
                 mainSongList.assertListItems(
-                    testedItemsZeroBasedIndexes.map { songFakeList[it] }) { itemViewSupplier, position, _ ->
+                    testedItemsZeroBasedIndexes.map { songFakeList[it] }, caseDescription2
+                ) { itemViewSupplier, position, _ ->
                     var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                     if (position == 0) {
@@ -1002,9 +1010,11 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             PlayMusicScreen(this).apply {
                 activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
             }
+
             AddPlaylistScreen(this).apply {
                 // check default playlist "All Songs" in ADD_PLAYLIST state and select items
-                mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+                val caseDescription = "On ADD_PLAYLIST state after playlist $playlistName was added and $mainMenuItemIdAddPlaylist was clicked."
+                mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, item ->
                     var songSelectorItemBindings = SongSelectorItemBindings(itemViewSupplier)
                     assertEquals(
                         "No songSelectorItemCheckBox should be checked after click on mainMenuItemIdAddPlaylist",
@@ -1032,8 +1042,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 )
 
                 // check loaded playlist in ADD_PLAYLIST state keeps selected items
+                val caseDescription2 = "On ADD_PLAYLIST state after playlist $playlistName is loaded."
                 mainSongList.assertListItems(
-                    songFakeList.filter { it.id in playlistAItemsOneBasedIndexes }
+                    songFakeList.filter { it.id in playlistAItemsOneBasedIndexes },
+                    caseDescription2
                 ) { itemViewSupplier, _, item ->
 
                     val checkBox =
@@ -1097,11 +1109,11 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             addPlaylistBtnCancel.clickAndRun()
         }
         PlayMusicScreen(this).apply {
-
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, position, song ->
+            val caseDescription = "The currentPlaylist in PLAY_MUSIC state should not change " +
+                    "after loading a playlist in ADD_PLAYLIST state"
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, position, song ->
                 assertSongItem(
-                    "The currentPlaylist should not change " +
-                            "after loading a playlist in ADD_PLAYLIST state",
+                    caseDescription,
                     itemViewSupplier(), song
                 )
                 val songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
@@ -1148,7 +1160,8 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
         }
         AddPlaylistScreen(this).apply {
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+            val caseDescription = "On ADD_PLAYLIST state after playlist $playlistName1 was added and $mainMenuItemIdAddPlaylist was clicked."
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, item ->
                 if (item.id - 1 in selectItemsOne) {
                     itemViewSupplier().clickAndRun()
                 }
@@ -1158,7 +1171,8 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
                 expectedPlaylistNameList = listOf("All Songs", playlistName1),
                 playlistToLoadIndex = 1
             )
-            mainSongList.assertListItems(loadPlaylistOneSongs) { itemViewSupplier, _, item ->
+            val caseDescription2 = "On ADD_PLAYLIST state after playlist $playlistName1 was loaded."
+            mainSongList.assertListItems(loadPlaylistOneSongs, caseDescription2) { itemViewSupplier, _, item ->
                 if (item.id - 1 in selectItemsTwo) {
                     itemViewSupplier().clickAndRun()
                 }
@@ -1175,7 +1189,8 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             )
             val messageItemsSaved =
                 "The playlist saved should contain the selected items when clicking addPlaylistBtnOk"
-            mainSongList.assertListItems(loadPlaylistOneSongs) { itemViewSupplier, _, song ->
+            val caseDescription = "On PLAY_MUSIC state after playlist $playlistName2 is loaded."
+            mainSongList.assertListItems(loadPlaylistOneSongs, caseDescription) { itemViewSupplier, _, song ->
                 assertSongItem(messageItemsSaved, itemViewSupplier(), song)
             }
         }
@@ -1212,9 +1227,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             )
 
             // check loaded items
-            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, song ->
+            val caseDescription = "On PLAY_MUSIC state after playlist $playlistName is loaded."
+            mainSongList.assertListItems(playlistSongFake, caseDescription) { itemViewSupplier, _, song ->
                 assertSongItem(
-                    "Wrong list item after playlist loaded",
+                    "$caseDescription Wrong list item.",
                     itemViewSupplier(),
                     song
                 )
@@ -1228,9 +1244,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         PlayMusicScreen(this).apply {
 
             // check loaded items remains
-            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, item ->
+            val caseDescription = "On PLAY_MUSIC state after playlist $playlistName is loaded and a new playlist addition was canceled."
+            mainSongList.assertListItems(playlistSongFake, caseDescription) { itemViewSupplier, _, item ->
                 val messageWrongListItemAfterCancel =
-                    "Playlist loaded should remain after addPlaylistBtnCancel clicked"
+                    "$caseDescription Playlist loaded should remain after addPlaylistBtnCancel clicked"
                 assertSongItem(messageWrongListItemAfterCancel, itemViewSupplier(), item)
             }
             //
@@ -1267,7 +1284,8 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         }
         PlayMusicScreen(this).apply {
             // check item keeps selected state after cancel add list
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+            val caseDescription = "On PLAY_MUSIC state new playlist addition was canceled."
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, item ->
                 var songItemImgBtnPlayPause = songItemImgBtnPlayPauseSupplier(itemViewSupplier)
 
                 if (item.id == selectedSongZeroIndex + 1) {
@@ -1324,6 +1342,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     @Test
     fun test20_checkDeletePlaylistOnPlayMusicStateDeletingPlaylistThatIsNotCurrentPlaylist() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+        val playlistName = "My Playlist"
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
 
@@ -1331,7 +1350,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         }
         AddPlaylistScreen(this).apply {
             addPlaylist(
-                playlistName = "My Playlist",
+                playlistName = playlistName,
                 selectedItemsIndex = testedItemsZeroBasedIndexes,
                 songListView = mainSongList,
                 fragmentContainer = mainFragmentContainer
@@ -1348,7 +1367,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
                 assertEquals(
                     "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                    listOf("My Playlist"),
+                    listOf(playlistName),
                     dialogItems
                 )
                 shadowDialog.clickAndRunOnItem(0)
@@ -1392,9 +1411,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             //
 
             //check currentPlaylist remains
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+            val caseDescription = "On PLAY_MUSIC state after playlist $playlistName is deleted."
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, song ->
                 assertSongItem(
-                    "Deleting a playlist that is not the currentPlaylist " +
+                    "$caseDescription Deleting a playlist that is not the currentPlaylist " +
                             "should not change the currentPlaylist",
                     itemViewSupplier(), song
                 )
@@ -1407,7 +1427,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     fun test21_checkDeletePlaylistOnPlayMusicStateWithCurrentPlaylistBeingDeleted() = testActivity {
         val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
         val testedItemsOneBasedIndexes = testedItemsZeroBasedIndexes.map { it + 1 }
-        val playlistName = "My Playlist"
+        val playlistName = "zZz"
 
         PlayMusicScreen(this).apply {
             mainButtonSearch.clickAndRun()
@@ -1431,10 +1451,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
             // check loaded items
             val playlistSongFake = songFakeList.filter { it.id in testedItemsOneBasedIndexes }
-
-            mainSongList.assertListItems(playlistSongFake) { itemViewSupplier, _, item ->
+            val caseDescription = "On PLAY_MUSIC state after playlist $playlistName is loaded."
+            mainSongList.assertListItems(playlistSongFake, caseDescription) { itemViewSupplier, _, item ->
                 val messageWrongListItemAfterPlaylistLoaded =
-                    "Wrong list item after playlist loaded"
+                    "$caseDescription Wrong list item after playlist loaded."
                 assertSongItem(
                     messageWrongListItemAfterPlaylistLoaded,
                     itemViewSupplier(),
@@ -1461,7 +1481,8 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             //
 
             //check items
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, item ->
+            val caseDescription2 = "on PLAY_MUSIC state after deleting current playlist with name $playlistName"
+            mainSongList.assertListItems(songFakeList, caseDescription2) { itemViewSupplier, _, item ->
                 val messageWrongItem =
                     "Wrong list item found after deleting current playlist, " +
                             "expected \"All songs\" playlist to be loaded"
@@ -1508,99 +1529,100 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
     }
 
     @Test
-    fun test22_checkDeletePlaylistOnAddPlaylistStateDeletingPlaylistThatIsNotDisplayingAndNotCurrentPlaylist() = testActivity {
-        val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
-        PlayMusicScreen(this).apply {
-            mainButtonSearch.clickAndRun()
-            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-        }
-        AddPlaylistScreen(this).apply {
-            addPlaylist(
-                playlistName = "My Playlist",
-                selectedItemsIndex = testedItemsZeroBasedIndexes,
-                songListView = mainSongList,
-                fragmentContainer = mainFragmentContainer
-            )
-        }
-        PlayMusicScreen(this).apply {
-            activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
-        }
-        AddPlaylistScreen(this).apply {
-            // delete playlist
-            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
-
-            getLastAlertDialogWithShadow(
-                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-            ).also { (_, shadowDialog) ->
-                val dialogItems = shadowDialog.items.map { it.toString() }
-
-                assertEquals(
-                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                    listOf("My Playlist"),
-                    dialogItems
-                )
-                shadowDialog.clickAndRunOnItem(0)
+    fun test22_checkDeletePlaylistOnAddPlaylistStateDeletingPlaylistThatIsNotDisplayingAndNotCurrentPlaylist() {
+        val playlistName = "My Playlist"
+        testActivity {
+            val testedItemsZeroBasedIndexes = listOf(1, 3, 6)
+            PlayMusicScreen(this).apply {
+                mainButtonSearch.clickAndRun()
+                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
             }
-            //
-
-            // check delete dialog don't display deleted playlist
-            activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
-
-            getLastAlertDialogWithShadow(
-                "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
-            ).also { (dialog, shadowDialog) ->
-                val dialogItems = shadowDialog.items.map { it.toString() }
-
-                assertEquals(
-                    "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
-                    listOf<String>(),
-                    dialogItems
+            AddPlaylistScreen(this).apply {
+                addPlaylist(
+                    playlistName = playlistName,
+                    selectedItemsIndex = testedItemsZeroBasedIndexes,
+                    songListView = mainSongList,
+                    fragmentContainer = mainFragmentContainer
                 )
-
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
             }
-            //
-
-            // check load dialog don't display deleted playlist
-            activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
-
-            getLastAlertDialogWithShadow(
-                "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
-            ).also { (dialog, shadowDialog) ->
-                val dialogItems = shadowDialog.items.map { it.toString() }
-
-                assertEquals(
-                    "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
-                    listOf("All Songs"),
-                    dialogItems
-                )
-
-                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+            PlayMusicScreen(this).apply {
+                activity.clickMenuItemAndRun(mainMenuItemIdAddPlaylist)
             }
-            //
+            AddPlaylistScreen(this).apply {
+                // delete playlist
+                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
 
-            // check SongSelector items remains
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
-                SongSelectorItemBindings(itemViewSupplier).apply {
-                    val errorMessage =
-                        "After deleting in ADD_PLAYLIST state a playlist that is not displaying " +
-                                "the playlist that is displaying should remain"
-                    assertSongSelectorInfo(errorMessage, song)
+                getLastAlertDialogWithShadow(
+                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+                ).also { (_, shadowDialog) ->
+                    val dialogItems = shadowDialog.items.map { it.toString() }
+
+                    assertEquals(
+                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                        listOf(playlistName),
+                        dialogItems
+                    )
+                    shadowDialog.clickAndRunOnItem(0)
+                }
+                //
+
+                // check delete dialog don't display deleted playlist
+                activity.clickMenuItemAndRun(mainMenuItemIdDeletePlaylist)
+
+                getLastAlertDialogWithShadow(
+                    "An AlertDialog should be displayed after click on mainMenuItemDeletePlaylist"
+                ).also { (dialog, shadowDialog) ->
+                    val dialogItems = shadowDialog.items.map { it.toString() }
+
+                    assertEquals(
+                        "Wrong list displayed on AlertDialog after click on mainMenuItemDeletePlaylist",
+                        listOf<String>(),
+                        dialogItems
+                    )
+
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+                }
+                //
+
+                // check load dialog don't display deleted playlist
+                activity.clickMenuItemAndRun(mainMenuItemIdLoadPlaylist)
+
+                getLastAlertDialogWithShadow(
+                    "An AlertDialog should be displayed after click on mainMenuItemLoadPlaylist"
+                ).also { (dialog, shadowDialog) ->
+                    val dialogItems = shadowDialog.items.map { it.toString() }
+
+                    assertEquals(
+                        "Wrong list displayed on AlertDialog after click on mainMenuItemLoadPlaylist",
+                        listOf("All Songs"),
+                        dialogItems
+                    )
+
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).clickAndRun()
+                }
+                //
+
+                // check SongSelector items remains
+                val caseDescription = "After deleting in ADD_PLAYLIST state a playlist that is not displaying " +
+                        "the playlist that is displaying should remain"
+                mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, song ->
+                    SongSelectorItemBindings(itemViewSupplier).apply {
+                        assertSongSelectorInfo(caseDescription, song)
+                    }
+                }
+                addPlaylistBtnCancel.clickAndRun()
+            }
+            PlayMusicScreen(this).apply {
+                //check currentPlaylist remains
+                val caseDescription =
+                    "After deleting in ADD_PLAYLIST state a playlist that is not the currentPlaylist" +
+                            "the currentPlaylist on PLAY_MUSIC state should remain"
+                mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, song ->
+                    assertSongItem(caseDescription, itemViewSupplier(), song)
                 }
             }
-            addPlaylistBtnCancel.clickAndRun()
+            Unit
         }
-        PlayMusicScreen(this).apply {
-            //check currentPlaylist remains
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
-                val errorMessage =
-                    "After deleting in ADD_PLAYLIST state a playlist that is not the currentPlaylist" +
-                            "the currentPlaylist should remain"
-
-                assertSongItem(errorMessage, itemViewSupplier(), song)
-            }
-        }
-        Unit
     }
 
     @Test
@@ -1693,12 +1715,11 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             //
 
             // check SongSelector changes to "All Songs"
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+            val  caseDescription = "After deleting in ADD_PLAYLIST state a playlist that is displaying " +
+                    "the playlist that is displaying should change to \"All Songs\""
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, song ->
                 SongSelectorItemBindings(itemViewSupplier).apply {
-                    val errorMessage =
-                        "After deleting in ADD_PLAYLIST state a playlist that is displaying " +
-                                "the playlist that is displaying should change to \"All Songs\""
-                    assertSongSelectorInfo(errorMessage, song)
+                    assertSongSelectorInfo(caseDescription, song)
                 }
             }
 
@@ -1706,11 +1727,11 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         }
         PlayMusicScreen(this).apply {
             //check currentPlaylist changes to "All Songs"
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
-                val errorMessage =
-                    "After deleting in ADD_PLAYLIST state a playlist that is the currentPlaylist" +
-                            "the currentPlaylist should change to \"All Songs\""
-                assertSongItem(errorMessage, itemViewSupplier(), song)
+            val caseDescription =
+                "After deleting in ADD_PLAYLIST state a playlist that is the currentPlaylist" +
+                        "the currentPlaylist should change to \"All Songs\""
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, song ->
+                assertSongItem(caseDescription, itemViewSupplier(), song)
             }
         }
         Unit
@@ -1743,9 +1764,10 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             )
 
             mainButtonSearch.clickAndRun()
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+            val caseDescription = "On PLAY_MUSIC state after clicking $ID_MAIN_BUTTON_SEARCH expected All Songs playlist to be loaded"
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, song ->
                 assertSongItem(
-                    "Wrong list item after search button clicked",
+                    "$caseDescription Wrong list item after search button clicked",
                     itemViewSupplier(),
                     song
                 )
@@ -1791,22 +1813,22 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
             )
 
             mainButtonSearch.clickAndRun()
-
-            mainSongList.assertListItems(songFakeList) { itemViewSupplier, _, song ->
+            val caseDescription =
+                "After mainButtonSearch is clicked on ADD_PLAYLIST state " +
+                        "the \"All Songs\" playlist should be displaying"
+            mainSongList.assertListItems(songFakeList, caseDescription) { itemViewSupplier, _, song ->
                 SongSelectorItemBindings(itemViewSupplier).apply {
-                    val errorMessage =
-                        "After mainButtonSearch is clicked on ADD_PLAYLIST state " +
-                                "the \"All Songs\" playlist should be displaying"
-                    assertSongSelectorInfo(errorMessage, song)
+                    assertSongSelectorInfo(caseDescription, song)
                 }
             }
             addPlaylistBtnCancel.clickAndRun()
         }
         PlayMusicScreen(this).apply {
-            mainSongList.assertListItems(playlist) { itemViewSupplier, _, song ->
+            val caseDescription = "After mainButtonSearch is clicked on ADD_PLAYLIST state " +
+                    "the currentPlaylist in PLAY_MUSIC state should not change."
+            mainSongList.assertListItems(playlist, caseDescription) { itemViewSupplier, _, song ->
                 assertSongItem(
-                    "After mainButtonSearch is clicked on ADD_PLAYLIST state " +
-                            "the currentPlaylist in PLAY_MUSIC state should not change",
+                    caseDescription,
                     itemViewSupplier(), song
                 )
             }

@@ -124,10 +124,10 @@ class PlayMusicScreen(
         val songItemTvDuration = itemView.findViewByStringOrNull<TextView>(ID_SONG_ITEM_TV_DURATION)
             ?: throw AssertionError("$errorMessage Could not find view $ID_SONG_ITEM_TV_DURATION")
 
-        assertEquals(errorMessage, song.artist, songItemTvArtist.text.toString())
-        assertEquals(errorMessage, song.title, songItemTvTitle.text.toString())
+        assertEquals("$errorMessage Wrong text on $ID_SONG_ITEM_TV_ARTIST", song.artist, songItemTvArtist.text.toString())
+        assertEquals("$errorMessage Wrong text $ID_SONG_ITEM_TV_TITLE", song.title, songItemTvTitle.text.toString())
         assertEquals(
-            errorMessage,
+            "$errorMessage Wrong text on $ID_SONG_ITEM_TV_DURATION",
             song.duration.timeString(),
             songItemTvDuration.text.toString()
         )

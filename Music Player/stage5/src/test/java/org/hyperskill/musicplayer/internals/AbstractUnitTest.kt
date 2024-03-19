@@ -328,12 +328,12 @@ abstract class AbstractUnitTest<T : Activity>(clazz: Class<T>) {
         assertItems: (itemViewSupplier: () -> View, position: Int, item: T) -> Unit
     ) : Unit {
 
-        assertNotNull("Your recycler view adapter should not be null", this.adapter)
+        assertNotNull("$caseDescription Your recycler view adapter should not be null", this.adapter)
 
         val expectedSize = fakeResultList.size
 
         val actualSize = this.adapter!!.itemCount
-        Assert.assertEquals("Incorrect number of list items", expectedSize, actualSize)
+        Assert.assertEquals("$caseDescription Incorrect number of list items", expectedSize, actualSize)
 
         if(expectedSize == 0) {
             return
@@ -388,12 +388,12 @@ abstract class AbstractUnitTest<T : Activity>(clazz: Class<T>) {
         assertItems: (itemViewSupplier: () -> View, position: Int, item: T, elapsedTime: Int) -> Unit
     ) : Unit {
 
-        assertNotNull("Your recycler view adapter should not be null", this.adapter)
+        assertNotNull("$caseDescription Your recycler view adapter should not be null", this.adapter)
 
         val expectedSize = fakeResultList.size
 
         val actualSize = this.adapter!!.itemCount
-        Assert.assertEquals("Incorrect number of list items", expectedSize, actualSize)
+        Assert.assertEquals("$caseDescription Incorrect number of list items", expectedSize, actualSize)
 
         if(expectedSize == 0) {
             return
@@ -446,13 +446,13 @@ abstract class AbstractUnitTest<T : Activity>(clazz: Class<T>) {
         caseDescription: String = "",
         action: (itemViewSupplier: () -> View) -> Unit) {
 
-        assertNotNull("Your recycler view adapter should not be null", this.adapter)
+        assertNotNull("$caseDescription Your recycler view adapter should not be null", this.adapter)
 
         val expectedMinSize = itemIndex + 1
 
         val actualSize = this.adapter!!.itemCount
         assertTrue(
-            "RecyclerView was expected to contain item with index $itemIndex, but its size was $actualSize",
+            "$caseDescription RecyclerView was expected to contain item with index $itemIndex, but its size was $actualSize",
             actualSize >= expectedMinSize
         )
 
