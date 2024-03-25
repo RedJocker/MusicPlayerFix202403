@@ -51,6 +51,7 @@ class Stage2UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         setupContentProvider(songFakeList)
         shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
         CustomMediaPlayerShadow.setFakeSong(songFakeList[0])
+        CustomMediaPlayerShadow.acceptRawWisdom = true
     }
 
 

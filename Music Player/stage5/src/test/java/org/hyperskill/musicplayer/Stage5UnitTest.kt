@@ -2,10 +2,7 @@ package org.hyperskill.musicplayer
 
 import android.Manifest
 import android.content.ContentValues
-import android.widget.Button
 import androidx.core.database.sqlite.transaction
-import androidx.fragment.app.FragmentContainerView
-import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.internals.AddPlaylistScreen
 import org.hyperskill.musicplayer.internals.CustomMediaPlayerShadow
 import org.hyperskill.musicplayer.internals.CustomShadowAsyncDifferConfig
@@ -50,6 +47,7 @@ class Stage5UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
         setupContentProvider(SongFakeRepository.fakeSongData)
         shadowActivity.grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
         CustomMediaPlayerShadow.setFakeSong(SongFakeRepository.fakeSongData[0])
+        CustomMediaPlayerShadow.acceptRawWisdom = false
     }
 
     @Test

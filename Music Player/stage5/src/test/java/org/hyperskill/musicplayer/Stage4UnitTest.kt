@@ -2,9 +2,6 @@ package org.hyperskill.musicplayer
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.widget.Button
-import androidx.fragment.app.FragmentContainerView
-import androidx.recyclerview.widget.RecyclerView
 import org.hyperskill.musicplayer.internals.CustomMediaPlayerShadow
 import org.hyperskill.musicplayer.internals.CustomShadowAsyncDifferConfig
 import org.hyperskill.musicplayer.internals.CustomShadowCountDownTimer
@@ -13,7 +10,7 @@ import org.hyperskill.musicplayer.internals.MusicPlayerUnitTests
 import org.hyperskill.musicplayer.internals.PlayMusicScreen
 import org.hyperskill.musicplayer.internals.SongFake
 import org.junit.After
-import org.junit.Assert
+import org.junit.Before
 import org.junit.FixMethodOrder
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +28,11 @@ class Stage4UnitTest : MusicPlayerUnitTests<MainActivity>(MainActivity::class.ja
 
     companion object {
         const val expectedRequestCode = 1
+    }
+
+    @Before
+    fun setUp() {
+        CustomMediaPlayerShadow.acceptRawWisdom = false
     }
 
     @Test

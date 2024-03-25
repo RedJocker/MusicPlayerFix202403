@@ -38,10 +38,19 @@ public class CustomMediaPlayerShadow extends ShadowMediaPlayer {
 
     public static boolean wasResetOrRecreated = false;
 
+    public static boolean acceptRawWisdom = true;
+
 
     @Implementation
     public static MediaPlayer create(Context context, int resid){
-        if(resid == R.raw.wisdom) {
+        if (!acceptRawWisdom) {
+            Uri expectedSongUri = ContentUris.withAppendedId(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    fakeSong.getId()
+            );
+            throw new AssertionError("Expected MediaPlayer to be created with uri " + expectedSongUri.toString());
+        }
+        else if(resid == R.raw.wisdom) {
             DataSource dataSource = DataSource.toDataSource(String.valueOf(resid));
             MediaInfo info = new MediaInfo(fakeSong.getDuration(), 0);
 
@@ -71,7 +80,22 @@ public class CustomMediaPlayerShadow extends ShadowMediaPlayer {
 
     @Implementation
     protected static MediaPlayer create(Context context, Uri trackUri){
-        if(trackUri.getPath().equals("/raw/wisdom")) {
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("android.resource")
+                .authority(context.getPackageName())
+                .appendPath("raw")
+                .appendPath("wisdom");
+        Uri uri = builder.build();
+
+        Uri.Builder builder2 = new Uri.Builder();
+        builder2.scheme("android.resource")
+                .authority(context.getPackageName())
+                .appendPath(String.valueOf(R.raw.wisdom));
+        Uri uri2 = builder2.build();
+
+        if(acceptRawWisdom && (trackUri.toString().equals(uri.toString())
+                ||  trackUri.toString().equals(uri2.toString()))
+        ) {
             return create(context, R.raw.wisdom);
         }
 
@@ -80,7 +104,7 @@ public class CustomMediaPlayerShadow extends ShadowMediaPlayer {
                 fakeSong.getId()
         );
 
-        assertEquals("Media player created with incorrect uri", expectedSongUri.getPath(), trackUri.getPath());
+        assertEquals("Media player created with incorrect uri", expectedSongUri.toString(), trackUri.toString());
 
         DataSource dataSource = DataSource.toDataSource(context, trackUri);
 
@@ -119,7 +143,22 @@ public class CustomMediaPlayerShadow extends ShadowMediaPlayer {
             Map<String, String> headers,
             List<HttpCookie> cookies) throws IOException {
 
-        if(trackUri.getPath().equals("/raw/wisdom")) {
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("android.resource")
+                .authority(context.getPackageName())
+                .appendPath("raw")
+                .appendPath("wisdom");
+        Uri uri = builder.build();
+
+        Uri.Builder builder2 = new Uri.Builder();
+        builder2.scheme("android.resource")
+                .authority(context.getPackageName())
+                .appendPath(String.valueOf(R.raw.wisdom));
+        Uri uri2 = builder2.build();
+
+        if(acceptRawWisdom && (trackUri.toString().equals(uri.toString())
+                ||  trackUri.toString().equals(uri2.toString()))
+        ) {
             DataSource dataSource = DataSource.toDataSource(context, trackUri);
             MediaInfo info = new MediaInfo(fakeSong.getDuration(), 0);
             addMediaInfo(dataSource, info);
@@ -130,8 +169,8 @@ public class CustomMediaPlayerShadow extends ShadowMediaPlayer {
             );
 
             assertEquals(
-                    "Media player created with incorrect uri",
-                    expectedSongUri.getPath(), trackUri.getPath()
+                    "Incorrect track uri",
+                    expectedSongUri.toString(), trackUri.toString()
             );
 
             DataSource dataSource = DataSource.toDataSource(context, trackUri);
