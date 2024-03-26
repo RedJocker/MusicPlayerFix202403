@@ -25,7 +25,8 @@
 	<li><code>Handler</code>:
 	<ul>
 		<li>one possible way to sync <code>controllerSeekBar</code> and <code>controllerTvCurrentTime</code> with <code>MediaPlayer</code> while the <code>currentTrack</code> is playing is to use the method <code>postDelayed</code> recursively; this method is available on the <code>Handler</code> object, which can be instantiated with <code>Handler(Looper.getMainLooper())</code>; the idea is to call an update function from time to time;</li>
-		<li>the frequency of updates can be set to one second, but you should rely on the player <code>currentPosition</code> to set values for controller widgets; relying on other ways to measure time passage and update controller widgets is not guaranteed to work with tests, since tests use time emulation;</li>
+		<li>rely on the player <code>currentPosition</code> to set values for controller widgets; relying on other ways to measure time passage and update controller widgets is not guaranteed to work with tests, since tests use time emulation;</li>
+		<li>tests will use second as the smallest timeunit asserted, but there can be some miss sync between tests and implementation making a faster frequency of updates like 500 or 200 milliseconds can solve this sync issue</li>
 		<li>tests will only assert if widgets contain the expected values, there are other possible ways to implement the update, and they should work with tests.</li>
 	</ul>
 	</li>
