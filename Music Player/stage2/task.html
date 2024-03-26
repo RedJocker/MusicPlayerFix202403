@@ -32,6 +32,7 @@
 		<li>on the <code>currentPlaylist</code>, there is always a <code>currentTrack</code>, which is the song that is currently loaded in response to <code>MainPlayerControllerFragment</code> events; it can be played, paused, or stopped; a <code>Track</code> is a song with its current state: playing, paused, or stopped;</li>
 		<li>loading a playlist in the <code>PLAY_MUSIC</code> state should change the <code>currentPlaylist</code> to the loaded playlist;</li>
 		<li>if a playlist that is loaded in the <code>PLAY_MUSIC</code> state contains the <code>currentTrack</code>, then the <code>currentTrack</code> should remain selected; if the <code>currentTrack</code> is playing/paused/stopped, it should remain to play/paused/stopped;</li>
+		<li>if a playlist that is loaded in the <code>PLAY_MUSIC</code> state does not contains the <code>currentTrack</code>, then select the first song of playlist as <code>currentTrack</code>;</li>
 		<li>loading a playlist in the <code>ADD_PLAYLIST</code> state should not change the <code>currentPlaylist</code>, but the list displayed in this state should change to the loaded playlist.</li>
 	</ul>
 	</li>
